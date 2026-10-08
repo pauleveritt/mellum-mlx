@@ -1,0 +1,101 @@
+"""Switch the oMLX per-model profile through the admin API, with verified restore.
+
+The two profiles are the spec's section 5.1. ``profile()`` snapshots the live
+settings and the settings file, applies a profile, verifies the live values,
+and restores the snapshot on exit even when the body raises.
+"""
+
+from __future__ import annotations
+
+import json
+import shutil
+import time
+import urllib.request
+from collections.abc import Iterator
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Protocol
+
+PROFILES: dict[str, dict] = {
+    "baseline": {
+        "max_context_window": 56000,
+        "max_tokens": 4096,
+        "thinking_budget_enabled": False,
+        "thinking_budget_tokens": None,
+        "presence_penalty": 0.0,
+        "repetition_penalty": 1.0,
+        "max_tool_result_tokens": None,
+        "chat_template_kwargs": None,
+        "forced_ct_kwargs": None,
+    },
+    "tuned": {
+        "max_context_window": 56000,
+        "max_tokens": 16384,
+        "thinking_budget_enabled": True,
+        "thinking_budget_tokens": 4096,
+        "presence_penalty": 0.5,
+        "repetition_penalty": 1.0,
+        "max_tool_result_tokens": 4000,
+        "chat_template_kwargs": {"enable_thinking": True},
+        "forced_ct_kwargs": ["enable_thinking"],
+    },
+}
+
+
+class ProfileMismatch(RuntimeError):
+    """The server accepted a settings update but the live values differ."""
+
+
+class SettingsClient(Protocol):
+    def get_settings(self, model_id: str) -> dict: ...
+    def put_settings(self, model_id: str, patch: dict) -> dict: ...
+
+
+class AdminClient:
+    """Minimal client for oMLX's admin API (auth is skipped on this server)."""
+
+    def __init__(self, base_url: str = "http://127.0.0.1:8001") -> None:
+        self.base = base_url.rstrip("/")
+
+    def _json(self, method: str, path: str, body: dict | None = None) -> dict:
+        data = json.dumps(body).encode() if body is not None else None
+        request = urllib.request.Request(
+            self.base + path,
+            data=data,
+            method=method,
+            headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(request, timeout=30) as response:
+            return json.loads(response.read() or b"{}")
+
+    def get_settings(self, model_id: str) -> dict:
+        for model in self._json("GET", "/admin/api/models").get("models", []):
+            if model.get("id") == model_id:
+                return model["settings"]
+        raise KeyError(model_id)
+
+    def put_settings(self, model_id: str, patch: dict) -> dict:
+        return self._json("PUT", f"/admin/api/models/{model_id}/settings", patch)
+
+
+def apply_profile(client: SettingsClient, model_id: str, name: str) -> dict:
+    patch = PROFILES[name]
+    client.put_settings(model_id, patch)
+    live = client.get_settings(model_id)
+    mismatched = {k: (v, live.get(k)) for k, v in patch.items() if live.get(k) != v}
+    if mismatched:
+        raise ProfileMismatch(f"{name}: {mismatched}")
+    return live
+
+
+@contextmanager
+def profile(client: SettingsClient, model_id: str, name: str, settings_path: Path) -> Iterator[dict]:
+    settings_path = Path(settings_path)
+    snapshot = client.get_settings(model_id)
+    if settings_path.exists():
+        stamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
+        shutil.copy2(settings_path, settings_path.with_name(f"{settings_path.name}.bak-ladder-{stamp}"))
+    try:
+        yield apply_profile(client, model_id, name)
+    finally:
+        client.put_settings(model_id, {key: snapshot.get(key) for key in PROFILES[name]})
