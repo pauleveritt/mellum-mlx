@@ -9,6 +9,7 @@ inheritProjectContext: false
 inheritGlobalContext: false
 inheritSkills: false
 extensions:
+subagentOnlyExtensions: ./.pi/extensions/mellum-guards.ts
 tools: read, grep, find, ls, bash, edit, write
 excludeTools: contact_supervisor
 allowedAgents:

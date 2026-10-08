@@ -40,6 +40,7 @@ class Score:
     bash_file_mutations: int = 0
     max_identical_streak: int = 0
     write_shrink: int = 0
+    nudges: int = 0
 
     def as_row(self) -> dict:
         row = asdict(self)
@@ -64,8 +65,15 @@ def score(events: list[dict], baseline_paths: set[str], baseline_lines: dict[str
         kind = event.get("type")
         if kind == "provider_request":
             result.requests += 1
-            size = len(json.dumps(event.get("payload", {})))
+            payload = event.get("payload", {})
+            size = len(json.dumps(payload))
             result.largest_prompt_chars = max(result.largest_prompt_chars, size)
+            nudges = sum(
+                "[mellum-guard]" in str(m.get("content", ""))
+                for m in (payload.get("messages") or [])
+                if isinstance(m, dict)
+            )
+            result.nudges = max(result.nudges, nudges)
         elif kind == "tool_call":
             name = event["toolName"]
             payload = event.get("input", {})

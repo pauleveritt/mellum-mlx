@@ -65,3 +65,11 @@ def test_write_shrink_flags_only_shrinking_writes():
     shrink = {"type": "tool_call", "toolName": "write", "input": {"path": "b.py", "content": "1\n"}}
     s = score([grow, shrink], {"a.py", "b.py"}, {"a.py": 2, "b.py": 40})
     assert len(s.write_existing) == 2 and s.write_shrink == 1
+
+
+def test_nudges_count_guard_messages_in_requests():
+    req = {"type": "provider_request", "payload": {"messages": [
+        {"role": "user", "content": "[mellum-guard] Your last turn ended with no reply."},
+        {"role": "user", "content": "[mellum-guard] Your last turn ended with no reply."},
+        {"role": "user", "content": "fix it"}]}}
+    assert score([req], set(), {}).nudges == 2

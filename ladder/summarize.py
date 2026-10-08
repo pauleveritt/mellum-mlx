@@ -37,6 +37,8 @@ def summarize(directory: Path) -> dict:
             nonzero["deadline_hit"] = nonzero.get("deadline_hit", 0) + 1
         if "final_text_chars" in record and not record["final_text_chars"]:
             nonzero["empty_final"] = nonzero.get("empty_final", 0) + 1
+        if record["score"].get("nudges"):
+            nonzero["nudges"] = nonzero.get("nudges", 0) + 1
         if record.get("thinking_reentries"):
             nonzero["thinking_reentries"] = nonzero.get("thinking_reentries", 0) + 1
         if "stop_reason" in record and record["stop_reason"] != "stop":
