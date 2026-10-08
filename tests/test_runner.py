@@ -50,3 +50,24 @@ def test_parse_pi_json_counts_thinking_reentries():
                  '[{"type":"thinking","thinking":"a"},{"type":"text","text":"Done."}]}}')
     stop, text, reentries = parse_pi_json("\n".join([two_blocks, one_block]), with_reentries=True)
     assert stop == "stop" and text == "Done." and reentries == 1
+
+
+def test_run_once_never_inherits_stdin(monkeypatch, tmp_path):
+    """Pi blocks forever on a non-TTY stdin that never reaches EOF; the worker must get DEVNULL."""
+    import subprocess as sp
+
+    from ladder import run_ladder
+    from ladder.rungs import CheckResult, Rung
+
+    seen = {}
+
+    def fake_run(args, **kwargs):
+        seen.update(kwargs)
+        return sp.CompletedProcess(args, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(run_ladder.subprocess, "run", fake_run)
+    monkeypatch.setattr(run_ladder, "prepare_workspace", lambda rung, scratch: scratch)
+    monkeypatch.setattr(run_ladder, "baseline_index", lambda ws: (set(), {}))
+    rung = Rung(1, "calculator", "fix it", ["true"], lambda ws, base: CheckResult(False, True))
+    run_ladder.run_once(rung, "direct", "baseline", 1, tmp_path / "out", 5, {}, False)
+    assert seen.get("stdin") is sp.DEVNULL

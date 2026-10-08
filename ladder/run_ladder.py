@@ -123,7 +123,7 @@ def run_once(rung: Rung, mode: str, prof: str, repeat: int, out: Path, deadline:
     deadline_hit = False
     stdout = ""
     try:
-        proc = subprocess.run(args, cwd=ws, env=env, capture_output=True, text=True, timeout=deadline)
+        proc = subprocess.run(args, cwd=ws, env=env, stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=deadline)
         stdout = proc.stdout + ("\n[stderr]\n" + proc.stderr if proc.stderr else "")
     except subprocess.TimeoutExpired as error:
         deadline_hit = True
