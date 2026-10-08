@@ -30,3 +30,9 @@ def test_comparison_table_has_a_row_per_rung(tmp_path):
     write_runs(a, [rec(1, False), rec(2, True)]); write_runs(b, [rec(1, True, profile="tuned"), rec(2, True, profile="tuned")])
     table = comparison_table({"baseline": summarize(a), "tuned": summarize(b)})
     assert "| 1 | 0/1 | 1/1 |" in table and "| 2 | 1/1 | 1/1 |" in table
+
+
+def test_summarize_flags_empty_final_and_non_stop(tmp_path):
+    r = rec(1, False); r["stop_reason"] = "length"; r["final_text_chars"] = 0
+    write_runs(tmp_path, [r, rec(1, True)])
+    assert summarize(tmp_path)["nonzero"] == {"empty_final": 1, "stop_reason!=stop": 1}

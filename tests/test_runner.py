@@ -17,3 +17,25 @@ def test_direct_args_are_the_clean_profile():
 def test_agent_file_body_matches_prompt():
     body = (ROOT / ".pi/agents/mellum-worker.md").read_text().split("---", 2)[2].strip()
     assert body == PROMPT_FILE.read_text().strip()
+
+
+def test_parse_pi_json_extracts_final_stop_and_text():
+    from ladder.run_ladder import parse_pi_json
+
+    lines = [
+        '{"type":"message_end","message":{"role":"user","content":"hi"}}',
+        '{"type":"message_end","message":{"role":"assistant","stopReason":"toolUse","content":[{"type":"toolCall","name":"read"}]}}',
+        '{"type":"message_end","message":{"role":"assistant","stopReason":"length","content":[{"type":"thinking","thinking":"..."}]}}',
+        '{"type":"agent_end"}',
+    ]
+    stop, text = parse_pi_json("\n".join(lines))
+    assert stop == "length" and text == ""
+    stop, text = parse_pi_json('{"type":"message_end","message":{"role":"assistant","stopReason":"stop","content":[{"type":"text","text":"Done."}]}}')
+    assert stop == "stop" and text == "Done."
+
+
+def test_direct_env_drops_virtual_env():
+    from ladder.run_ladder import child_env
+
+    env = child_env({"VIRTUAL_ENV": "/x", "PATH": "/bin"}, "/tmp/t.jsonl")
+    assert "VIRTUAL_ENV" not in env and env["MELLUM_TRACE_FILE"] == "/tmp/t.jsonl"

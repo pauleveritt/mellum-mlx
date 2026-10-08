@@ -35,6 +35,10 @@ def summarize(directory: Path) -> dict:
             nonzero[key] = nonzero.get(key, 0) + 1
         if record.get("deadline_hit"):
             nonzero["deadline_hit"] = nonzero.get("deadline_hit", 0) + 1
+        if "final_text_chars" in record and not record["final_text_chars"]:
+            nonzero["empty_final"] = nonzero.get("empty_final", 0) + 1
+        if "stop_reason" in record and record["stop_reason"] != "stop":
+            nonzero["stop_reason!=stop"] = nonzero.get("stop_reason!=stop", 0) + 1
     return {"directory": str(directory), "records": len(records), "rungs": dict(sorted(rungs.items())), "nonzero": nonzero}
 
 

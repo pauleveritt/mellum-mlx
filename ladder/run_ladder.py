@@ -34,20 +34,46 @@ PROMPT_VERSION = "v2"
 
 HEADER = (
     "| rung | profile | mode | rep | result | tests_unchanged | requests | tool_errors | anchor_fail | "
-    "noop_edit | write_existing | bash_mut | max_streak | largest_prompt_chars | deadline | wall_s (untrusted) |\n"
-    "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n"
+    "noop_edit | write_existing | bash_mut | max_streak | largest_prompt_chars | stop | final_chars | deadline | wall_s (untrusted) |\n"
+    "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n"
 )
 
 
 def build_pi_direct_args(trace: Path, sentence: str, guards: bool = False) -> list[str]:
     args = [
-        "pi", "-p", "--no-extensions", "--no-skills", "--no-prompt-templates", "--no-themes",
+        "pi", "-p", "--mode", "json", "--no-extensions", "--no-skills", "--no-prompt-templates", "--no-themes",
         "--no-context-files", "--no-session", "--thinking", "high", "--model", MODEL,
         "--tools", TOOLS, "--append-system-prompt", str(PROMPT_FILE), "-e", str(RECORD_EXT),
     ]
     if guards:
         args += ["-e", str(GUARDS_EXT)]
     return [*args, sentence]
+
+
+def child_env(parent: dict, trace: str) -> dict:
+    """The worker's environment: the parent's, minus the repo venv that uv exports."""
+    env = {k: v for k, v in parent.items() if k != "VIRTUAL_ENV"}
+    env.update({"MELLUM_TRACE_FILE": str(trace), "PI_OFFLINE": "1"})
+    return env
+
+
+def parse_pi_json(stdout: str) -> tuple[str | None, str]:
+    """Final assistant stop reason and visible text from Pi's JSON event stream."""
+    stop, text = None, ""
+    for line in stdout.splitlines():
+        if not line.startswith("{"):
+            continue
+        try:
+            event = json.loads(line)
+        except ValueError:
+            continue
+        message = event.get("message") or {}
+        if event.get("type") != "message_end" or message.get("role") != "assistant":
+            continue
+        stop = message.get("stopReason")
+        blocks = message.get("content") or []
+        text = "".join(b.get("text", "") for b in blocks if isinstance(b, dict) and b.get("type") == "text")
+    return stop, text.strip()
 
 
 def git(ws: Path, *args: str) -> str:
@@ -82,7 +108,7 @@ def run_once(rung: Rung, mode: str, prof: str, repeat: int, out: Path, deadline:
     ws = prepare_workspace(rung, scratch)
     paths, lines = baseline_index(ws)
     trace = scratch / "trace.jsonl"
-    env = {**os.environ, "MELLUM_TRACE_FILE": str(trace), "PI_OFFLINE": "1"}
+    env = child_env(dict(os.environ), str(trace))
     args = build_pi_direct_args(trace, rung.sentence, guards)
     started = time.time()
     deadline_hit = False
@@ -95,6 +121,7 @@ def run_once(rung: Rung, mode: str, prof: str, repeat: int, out: Path, deadline:
         captured = error.stdout or b""
         stdout = captured.decode(errors="replace") if isinstance(captured, bytes) else str(captured)
     wall = time.time() - started
+    stop_reason, final_text = parse_pi_json(stdout)
     events = read_events(trace)
     git(ws, "add", "-A")
     record = {
@@ -110,6 +137,8 @@ def run_once(rung: Rung, mode: str, prof: str, repeat: int, out: Path, deadline:
         "started": started,
         "wall_seconds_untrusted": round(wall, 1),
         "deadline_hit": deadline_hit,
+        "stop_reason": stop_reason,
+        "final_text_chars": len(final_text),
         "check": asdict(rung.check(ws, FIXTURES / rung.fixture)),
         "score": score(events, paths, lines).as_row(),
         "diff_stat": git(ws, "diff", "--cached", "--stat"),
@@ -122,6 +151,7 @@ def run_once(rung: Rung, mode: str, prof: str, repeat: int, out: Path, deadline:
     if trace.exists():
         shutil.copy(trace, run_dir / "trace.jsonl")
     (run_dir / "stdout.txt").write_text(stdout)
+    (run_dir / "final.md").write_text(final_text)
     (run_dir / "diff.patch").write_text(git(ws, "diff", "--cached"))
     return record
 
@@ -133,7 +163,7 @@ def table_row(record: dict) -> str:
         f"| {record['rung']} | {record['profile']}{'+guards' if record['guards'] else ''} | {record['mode']} | "
         f"{record['repeat']} | {result} | {c['tests_unchanged']} | {s['requests']} | {s['tool_errors']} | "
         f"{s['edit_anchor_failures']} | {s['noop_edits']} | {s['write_existing']} | {s['bash_file_mutations']} | "
-        f"{s['max_identical_streak']} | {s['largest_prompt_chars']} | {record['deadline_hit']} | "
+        f"{s['max_identical_streak']} | {s['largest_prompt_chars']} | {record['stop_reason']} | {record['final_text_chars']} | {record['deadline_hit']} | "
         f"{record['wall_seconds_untrusted']} |\n"
     )
 
