@@ -34,8 +34,8 @@ PROMPT_VERSION = "v3"
 
 HEADER = (
     "| rung | profile | mode | rep | result | tests_unchanged | requests | tool_errors | anchor_fail | "
-    "noop_edit | write_existing | write_shrink | bash_mut | max_streak | largest_prompt_chars | stop | final_chars | deadline | wall_s (untrusted) |\n"
-    "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n"
+    "noop_edit | write_existing | write_shrink | bash_mut | max_streak | largest_prompt_chars | stop | final_chars | reentries | deadline | wall_s (untrusted) |\n"
+    "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n"
 )
 
 
@@ -57,9 +57,14 @@ def child_env(parent: dict, trace: str) -> dict:
     return env
 
 
-def parse_pi_json(stdout: str) -> tuple[str | None, str]:
-    """Final assistant stop reason and visible text from Pi's JSON event stream."""
-    stop, text = None, ""
+def parse_pi_json(stdout: str, with_reentries: bool = False):
+    """Final assistant stop reason and visible text from Pi's JSON event stream.
+
+    With ``with_reentries`` also returns how many assistant messages carried
+    more than one thinking block: the model re-opened ``<think>`` after a
+    close, which gives it a fresh server-side thinking budget each time.
+    """
+    stop, text, reentries = None, "", 0
     for line in stdout.splitlines():
         if not line.startswith("{"):
             continue
@@ -71,8 +76,12 @@ def parse_pi_json(stdout: str) -> tuple[str | None, str]:
         if event.get("type") != "message_end" or message.get("role") != "assistant":
             continue
         stop = message.get("stopReason")
-        blocks = message.get("content") or []
-        text = "".join(b.get("text", "") for b in blocks if isinstance(b, dict) and b.get("type") == "text")
+        blocks = [b for b in (message.get("content") or []) if isinstance(b, dict)]
+        text = "".join(b.get("text", "") for b in blocks if b.get("type") == "text")
+        if sum(b.get("type") == "thinking" for b in blocks) > 1:
+            reentries += 1
+    if with_reentries:
+        return stop, text.strip(), reentries
     return stop, text.strip()
 
 
@@ -121,7 +130,7 @@ def run_once(rung: Rung, mode: str, prof: str, repeat: int, out: Path, deadline:
         captured = error.stdout or b""
         stdout = captured.decode(errors="replace") if isinstance(captured, bytes) else str(captured)
     wall = time.time() - started
-    stop_reason, final_text = parse_pi_json(stdout)
+    stop_reason, final_text, thinking_reentries = parse_pi_json(stdout, with_reentries=True)
     events = read_events(trace)
     git(ws, "add", "-A")
     record = {
@@ -139,6 +148,7 @@ def run_once(rung: Rung, mode: str, prof: str, repeat: int, out: Path, deadline:
         "deadline_hit": deadline_hit,
         "stop_reason": stop_reason,
         "final_text_chars": len(final_text),
+        "thinking_reentries": thinking_reentries,
         "baseline_lines": lines,
         "check": asdict(rung.check(ws, FIXTURES / rung.fixture)),
         "score": score(events, paths, lines).as_row(),
@@ -164,7 +174,7 @@ def table_row(record: dict) -> str:
         f"| {record['rung']} | {record['profile']}{'+guards' if record['guards'] else ''} | {record['mode']} | "
         f"{record['repeat']} | {result} | {c['tests_unchanged']} | {s['requests']} | {s['tool_errors']} | "
         f"{s['edit_anchor_failures']} | {s['noop_edits']} | {s['write_existing']} | {s['write_shrink']} | {s['bash_file_mutations']} | "
-        f"{s['max_identical_streak']} | {s['largest_prompt_chars']} | {record['stop_reason']} | {record['final_text_chars']} | {record['deadline_hit']} | "
+        f"{s['max_identical_streak']} | {s['largest_prompt_chars']} | {record['stop_reason']} | {record['final_text_chars']} | {record.get('thinking_reentries', '')} | {record['deadline_hit']} | "
         f"{record['wall_seconds_untrusted']} |\n"
     )
 

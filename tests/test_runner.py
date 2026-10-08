@@ -39,3 +39,14 @@ def test_direct_env_drops_virtual_env():
 
     env = child_env({"VIRTUAL_ENV": "/x", "PATH": "/bin"}, "/tmp/t.jsonl")
     assert "VIRTUAL_ENV" not in env and env["MELLUM_TRACE_FILE"] == "/tmp/t.jsonl"
+
+
+def test_parse_pi_json_counts_thinking_reentries():
+    from ladder.run_ladder import parse_pi_json
+
+    two_blocks = ('{"type":"message_end","message":{"role":"assistant","stopReason":"toolUse","content":'
+                  '[{"type":"thinking","thinking":"a"},{"type":"text","text":"b"},{"type":"thinking","thinking":"c"}]}}')
+    one_block = ('{"type":"message_end","message":{"role":"assistant","stopReason":"stop","content":'
+                 '[{"type":"thinking","thinking":"a"},{"type":"text","text":"Done."}]}}')
+    stop, text, reentries = parse_pi_json("\n".join([two_blocks, one_block]), with_reentries=True)
+    assert stop == "stop" and text == "Done." and reentries == 1

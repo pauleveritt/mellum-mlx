@@ -55,5 +55,6 @@
     "pyproject.toml": 11,
     "test_ledger.py": 13,
     "uv.lock": 79
-  }
+  },
+  "thinking_reentries": 0
 }

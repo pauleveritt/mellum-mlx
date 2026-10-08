@@ -13,7 +13,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from .run_ladder import HEADER, read_events, table_row
+from .run_ladder import HEADER, parse_pi_json, read_events, table_row
 from .score import score
 
 
@@ -34,6 +34,10 @@ def rescore_dir(directory: Path) -> int:
                 continue
             lines = baseline_from_workspace(ws)
             record["baseline_lines"] = lines
+        stdout = run_json.with_name("stdout.txt")
+        if "thinking_reentries" not in record and stdout.exists():
+            record["thinking_reentries"] = parse_pi_json(stdout.read_text(), with_reentries=True)[2]
+            changed += 1
         new = score(read_events(run_json.with_name("trace.jsonl")), set(lines), lines).as_row()
         if new != record.get("score"):
             record["score"] = new
