@@ -30,7 +30,7 @@ GUARDS_EXT = ROOT / ".pi" / "extensions" / "mellum-guards.ts"
 MODEL = "omlx/Mellum2.1-12B-A2.5B-Thinking-6bit"
 MODEL_ID = MODEL.split("/", 1)[1]
 TOOLS = "read,grep,find,ls,bash,edit,write"
-PROMPT_VERSION = "v2"
+PROMPT_VERSION = "v3"
 
 HEADER = (
     "| rung | profile | mode | rep | result | tests_unchanged | requests | tool_errors | anchor_fail | "
