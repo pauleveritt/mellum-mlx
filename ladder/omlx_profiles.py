@@ -40,6 +40,8 @@ PROFILES: dict[str, dict] = {
         "forced_ct_kwargs": ["enable_thinking"],
     },
 }
+# Variant to isolate the presence penalty: everything in tuned except the penalty.
+PROFILES["tuned-nopenalty"] = {**PROFILES["tuned"], "presence_penalty": 0.0}
 
 
 class ProfileMismatch(RuntimeError):

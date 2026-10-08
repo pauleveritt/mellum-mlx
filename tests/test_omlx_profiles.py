@@ -38,6 +38,12 @@ def test_restore_runs_on_exception(tmp_path):
     assert any(f.name.startswith("model_settings.json.bak-ladder-") for f in tmp_path.iterdir())
 
 
+def test_nopenalty_variant_differs_from_tuned_only_by_penalty():
+    tuned, variant = PROFILES["tuned"], PROFILES["tuned-nopenalty"]
+    assert variant["presence_penalty"] == 0.0
+    assert {k: v for k, v in variant.items() if k != "presence_penalty"} == {k: v for k, v in tuned.items() if k != "presence_penalty"}
+
+
 def test_profiles_have_required_keys():
-    for name in ("baseline", "tuned"):
+    for name in ("baseline", "tuned", "tuned-nopenalty"):
         assert {"max_tokens", "thinking_budget_enabled", "presence_penalty"} <= PROFILES[name].keys()

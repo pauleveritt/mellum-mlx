@@ -19,7 +19,7 @@ import time
 from dataclasses import asdict
 from pathlib import Path
 
-from .omlx_profiles import AdminClient, profile
+from .omlx_profiles import PROFILES, AdminClient, profile
 from .rungs import FIXTURES, RUNGS, Rung, copy_fixture
 from .score import score
 
@@ -190,7 +190,7 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--harness", choices=["pi"], default="pi")
     parser.add_argument("--mode", choices=["direct"], default="direct")
-    parser.add_argument("--profile", choices=["baseline", "tuned"], required=True)
+    parser.add_argument("--profile", choices=sorted(PROFILES), required=True)
     parser.add_argument("--rung", type=int, action="append", required=True)
     parser.add_argument("--repeat", type=int, default=1)
     parser.add_argument("--deadline", type=int, default=600)
