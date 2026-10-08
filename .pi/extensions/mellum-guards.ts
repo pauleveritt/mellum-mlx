@@ -13,8 +13,8 @@
  *   to summarise beats an abort, which the parent reads as a failed run.
  * - createEmptyFinalNudge: the one pathology the ladder recorded (5 of 45
  *   v3 runs, every failure): a turn ends with `stop`, no text, no tool call,
- *   part-way through the task. On `turn_end` the guard proposes one
- *   custom message restating the completion fact and asks for one more
+ *   part-way through the task. At `agent_before_settle` the guard proposes
+ *   one custom message restating the completion fact and asks for one more
  *   model request, at most `max` times per run.
  *
  * ENABLED is set from the phase 0-1 ladder tables: a guard is on only for a
@@ -181,10 +181,21 @@ export default function (pi: { on: (event: string, handler: (event: any) => unkn
 		return undefined;
 	});
 	if (enabled.emptyFinalNudge) {
+		// Pi reports canContinue=false on the final turn, which is exactly where an
+		// empty final lands; agent_before_settle still honours continue:true there
+		// (probed 2026-10-08 in print mode). Remember the last assistant turn, decide
+		// at settle.
 		const nudge = createEmptyFinalNudge(enabled.emptyFinalNudge);
+		let lastAssistant: MessageLike | undefined;
 		pi.on("turn_end", (event) => {
-			if (event?.context && event.context.canContinue === false) return undefined;
-			return nudge(event.message ?? {});
+			if (event?.message?.role === "assistant") lastAssistant = event.message;
+			return undefined;
+		});
+		pi.on("agent_before_settle", () => {
+			if (!lastAssistant) return undefined;
+			const decision = nudge(lastAssistant);
+			if (decision) lastAssistant = undefined;
+			return decision;
 		});
 	}
 }

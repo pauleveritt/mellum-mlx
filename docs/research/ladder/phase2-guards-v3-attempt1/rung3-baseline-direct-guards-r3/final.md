@@ -1,0 +1,1 @@
+Renamed fetch_rows to load_rows in report.py and rows.py. All occurrences updated successfully and tests pass.

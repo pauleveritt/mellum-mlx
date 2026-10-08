@@ -54,3 +54,16 @@ test("MELLUM_GUARDS env overrides ENABLED for live smokes", async () => {
 	assert.deepEqual(resolveEnabled({ emptyFinalNudge: 2 }, undefined), { emptyFinalNudge: 2 });
 	assert.deepEqual(resolveEnabled({ emptyFinalNudge: 2 }, "not json"), { emptyFinalNudge: 2 });
 });
+
+test("adapter nudges from agent_before_settle when the last assistant turn was empty", async () => {
+	const { default: install } = await import("./mellum-guards.ts");
+	const handlers = {};
+	install({ on: (name, fn) => { handlers[name] = fn; } });
+	const empty = { role: "assistant", content: [{ type: "thinking", thinking: "..." }, { type: "text", text: "\n\n" }] };
+	const done = { role: "assistant", content: [{ type: "text", text: "Done." }] };
+	handlers.turn_end({ message: empty, context: { canContinue: false }, outcome: "completed" });
+	const first = handlers.agent_before_settle({ context: { canContinue: false }, outcome: "completed" });
+	assert.ok(first?.continue, "empty last turn must trigger a continuation");
+	handlers.turn_end({ message: done, context: { canContinue: false }, outcome: "completed" });
+	assert.equal(handlers.agent_before_settle({ context: { canContinue: false }, outcome: "completed" }), undefined);
+});
