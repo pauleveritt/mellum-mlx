@@ -39,6 +39,7 @@ class Score:
     write_existing: list[dict] = field(default_factory=list)
     bash_file_mutations: int = 0
     max_identical_streak: int = 0
+    write_shrink: int = 0
 
     def as_row(self) -> dict:
         row = asdict(self)
@@ -77,13 +78,13 @@ def score(events: list[dict], baseline_paths: set[str], baseline_lines: dict[str
                 path = _path(payload)
                 if path and path in baseline_paths:
                     content = str(payload.get("content", ""))
+                    before = baseline_lines.get(path, 0)
+                    after = len(content.splitlines())
                     result.write_existing.append(
-                        {
-                            "path": path,
-                            "lines_before": baseline_lines.get(path, 0),
-                            "lines_after": len(content.splitlines()),
-                        }
+                        {"path": path, "lines_before": before, "lines_after": after}
                     )
+                    if after < before:
+                        result.write_shrink += 1
             if name == "bash" and bash_mutates(str(payload.get("command", ""))):
                 result.bash_file_mutations += 1
         elif kind == "tool_result":
@@ -91,7 +92,7 @@ def score(events: list[dict], baseline_paths: set[str], baseline_lines: dict[str
             if event.get("isError"):
                 result.tool_errors += 1
             if event["toolName"] == "edit":
-                if "not found" in content or "oldString" in content:
+                if "not found" in content or "oldString" in content or "Could not find" in content:
                     result.edit_anchor_failures += 1
                 if "No changes made" in content:
                     result.noop_edits += 1

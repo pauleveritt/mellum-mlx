@@ -1,0 +1,8 @@
+diff --git a/rows.py b/rows.py
+index 59212d1..1d45234 100644
+--- a/rows.py
++++ b/rows.py
+@@ -1,2 +1,2 @@
+-def fetch_rows(source):
++def load_rows(source):
+     return [tuple(line.split("|")) for line in source.splitlines() if line]

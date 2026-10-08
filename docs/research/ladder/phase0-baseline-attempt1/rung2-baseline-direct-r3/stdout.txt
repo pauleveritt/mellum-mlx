@@ -1,0 +1,14 @@
+
+
+Files changed:
+- ledger.py: Added `balance(entries)` function that sums the amounts of entries.
+- test_ledger.py: Added import of `balance` and a new test `test_balance()` verifying the sum logic.
+
+Test output:
+```
+warning: `VIRTUAL_ENV=/Users/pauleveritt/projects/pauleveritt/mellum-mlx/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+..                                                                       [100%]
+2 passed in 0.00s
+```
+
+All tasks completed.

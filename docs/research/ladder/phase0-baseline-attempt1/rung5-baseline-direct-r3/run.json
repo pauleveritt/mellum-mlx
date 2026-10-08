@@ -1,0 +1,62 @@
+{
+  "rung": 5,
+  "repeat": 3,
+  "profile": "baseline",
+  "mode": "direct",
+  "harness": "pi",
+  "guards": false,
+  "prompt_version": "v2",
+  "versions": {
+    "pi": "1.0.2",
+    "omlx": "0.6.4",
+    "model_settings": {
+      "max_tokens": 4096,
+      "thinking_budget_tokens": null,
+      "presence_penalty": 0.0,
+      "max_tool_result_tokens": null
+    }
+  },
+  "sentence": "the export is missing the totals row",
+  "started": 1791495551.055454,
+  "wall_seconds_untrusted": 39.5,
+  "deadline_hit": false,
+  "check": {
+    "passed": true,
+    "tests_unchanged": true,
+    "details": {
+      "decoy_untouched": true
+    }
+  },
+  "score": {
+    "requests": 10,
+    "largest_prompt_chars": 27021,
+    "tool_calls_by_name": {
+      "grep": 1,
+      "read": 4,
+      "find": 1,
+      "edit": 1,
+      "ls": 1,
+      "bash": 1
+    },
+    "tool_errors": 0,
+    "edit_anchor_failures": 0,
+    "noop_edits": 0,
+    "write_existing": 0,
+    "bash_file_mutations": 0,
+    "max_identical_streak": 1,
+    "write_shrink": 0
+  },
+  "diff_stat": " export.py | 13 +++++++++++--\n 1 file changed, 11 insertions(+), 2 deletions(-)\n",
+  "files_created": [],
+  "workspace": "/var/folders/m4/jc_jynrj6z10mk0t80pkj8l80000gn/T/ladder-jz2c167z/rung5",
+  "baseline_lines": {
+    ".gitignore": 4,
+    "export.py": 14,
+    "exports_legacy.py": 3,
+    "pyproject.toml": 11,
+    "render.py": 2,
+    "test_export.py": 9,
+    "totals.py": 4,
+    "uv.lock": 79
+  }
+}

@@ -34,8 +34,8 @@ PROMPT_VERSION = "v2"
 
 HEADER = (
     "| rung | profile | mode | rep | result | tests_unchanged | requests | tool_errors | anchor_fail | "
-    "noop_edit | write_existing | bash_mut | max_streak | largest_prompt_chars | stop | final_chars | deadline | wall_s (untrusted) |\n"
-    "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n"
+    "noop_edit | write_existing | write_shrink | bash_mut | max_streak | largest_prompt_chars | stop | final_chars | deadline | wall_s (untrusted) |\n"
+    "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n"
 )
 
 
@@ -139,6 +139,7 @@ def run_once(rung: Rung, mode: str, prof: str, repeat: int, out: Path, deadline:
         "deadline_hit": deadline_hit,
         "stop_reason": stop_reason,
         "final_text_chars": len(final_text),
+        "baseline_lines": lines,
         "check": asdict(rung.check(ws, FIXTURES / rung.fixture)),
         "score": score(events, paths, lines).as_row(),
         "diff_stat": git(ws, "diff", "--cached", "--stat"),
@@ -162,7 +163,7 @@ def table_row(record: dict) -> str:
     return (
         f"| {record['rung']} | {record['profile']}{'+guards' if record['guards'] else ''} | {record['mode']} | "
         f"{record['repeat']} | {result} | {c['tests_unchanged']} | {s['requests']} | {s['tool_errors']} | "
-        f"{s['edit_anchor_failures']} | {s['noop_edits']} | {s['write_existing']} | {s['bash_file_mutations']} | "
+        f"{s['edit_anchor_failures']} | {s['noop_edits']} | {s['write_existing']} | {s['write_shrink']} | {s['bash_file_mutations']} | "
         f"{s['max_identical_streak']} | {s['largest_prompt_chars']} | {record['stop_reason']} | {record['final_text_chars']} | {record['deadline_hit']} | "
         f"{record['wall_seconds_untrusted']} |\n"
     )

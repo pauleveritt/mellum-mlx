@@ -1,0 +1,8 @@
+
+
+Updated `export.py` to handle the `totals` parameter in `export_csv`, computing and appending a totals row when requested. The tests now pass:
+
+```
+..
+2 passed in 0.00s
+```

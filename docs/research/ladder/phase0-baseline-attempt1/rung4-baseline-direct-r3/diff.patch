@@ -1,0 +1,17 @@
+diff --git a/export.py b/export.py
+index 5904d9e..150aa06 100644
+--- a/export.py
++++ b/export.py
+@@ -1,5 +1,10 @@
+ from render import render_rows
+ 
+ 
+-def export_csv(rows):
+-    return "\n".join(render_rows(rows))
++def export_csv(rows, totals=False):
++    result = "\n".join(render_rows(rows))
++    if totals:
++        if rows:
++            total_row = [sum(col) for col in zip(*rows)]
++            result += "\n" + ",".join(str(v) for v in total_row)
++    return result

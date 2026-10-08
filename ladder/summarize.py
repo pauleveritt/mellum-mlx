@@ -9,7 +9,7 @@ import json
 import sys
 from pathlib import Path
 
-PATHOLOGY_COLUMNS = ("tool_errors", "edit_anchor_failures", "noop_edits", "write_existing", "bash_file_mutations")
+PATHOLOGY_COLUMNS = ("tool_errors", "edit_anchor_failures", "noop_edits", "write_existing", "write_shrink", "bash_file_mutations")
 STREAK_THRESHOLD = 5
 
 

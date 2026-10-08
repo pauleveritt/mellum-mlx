@@ -1,0 +1,62 @@
+{
+  "rung": 2,
+  "repeat": 2,
+  "profile": "baseline",
+  "mode": "direct",
+  "harness": "pi",
+  "guards": false,
+  "prompt_version": "v2",
+  "versions": {
+    "pi": "1.0.2",
+    "omlx": "0.6.4",
+    "model_settings": {
+      "max_tokens": 4096,
+      "thinking_budget_tokens": null,
+      "presence_penalty": 0.0,
+      "max_tool_result_tokens": null
+    }
+  },
+  "sentence": "add a balance() that sums the entries, with a test",
+  "started": 1791495845.5689862,
+  "wall_seconds_untrusted": 55.5,
+  "deadline_hit": false,
+  "stop_reason": "stop",
+  "final_text_chars": 172,
+  "check": {
+    "passed": true,
+    "tests_unchanged": true,
+    "details": {
+      "new_tests": [
+        "test_ledger.py::test_balance"
+      ]
+    }
+  },
+  "score": {
+    "requests": 20,
+    "largest_prompt_chars": 37290,
+    "tool_calls_by_name": {
+      "grep": 3,
+      "find": 2,
+      "read": 7,
+      "edit": 6,
+      "bash": 1
+    },
+    "tool_errors": 3,
+    "edit_anchor_failures": 3,
+    "noop_edits": 0,
+    "write_existing": 0,
+    "bash_file_mutations": 0,
+    "max_identical_streak": 1,
+    "write_shrink": 0
+  },
+  "diff_stat": " ledger.py      | 3 +++\n test_ledger.py | 5 ++++-\n 2 files changed, 7 insertions(+), 1 deletion(-)\n",
+  "files_created": [],
+  "workspace": "/var/folders/m4/jc_jynrj6z10mk0t80pkj8l80000gn/T/ladder-5xhn8l1b/rung2",
+  "baseline_lines": {
+    ".gitignore": 4,
+    "ledger.py": 18,
+    "pyproject.toml": 11,
+    "test_ledger.py": 11,
+    "uv.lock": 79
+  }
+}

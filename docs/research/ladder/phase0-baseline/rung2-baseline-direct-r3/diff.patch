@@ -1,0 +1,33 @@
+diff --git a/ledger.py b/ledger.py
+index e66e869..5c35493 100644
+--- a/ledger.py
++++ b/ledger.py
+@@ -7,6 +7,9 @@ class Entry:
+     amount: int
+ 
+ 
++def balance(entries):
++    return sum(e.amount for e in entries)
++
+ def entries_from_lines(lines):
+     out = []
+     for line in lines:
+diff --git a/test_ledger.py b/test_ledger.py
+index 6c67281..ad57533 100644
+--- a/test_ledger.py
++++ b/test_ledger.py
+@@ -1,4 +1,4 @@
+-from ledger import Entry, entries_from_lines
++from ledger import Entry, entries_from_lines, balance
+ 
+ 
+ def test_parses_lines():
+@@ -6,3 +6,7 @@ def test_parses_lines():
+         Entry("coffee", -3),
+         Entry("pay", 10),
+     ]
++
++
++def test_balance():
++    assert balance([Entry("coffee", -3), Entry("pay", 10)]) == 7
+\ No newline at end of file

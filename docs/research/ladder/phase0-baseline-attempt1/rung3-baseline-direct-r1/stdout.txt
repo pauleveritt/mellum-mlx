@@ -1,0 +1,10 @@
+
+
+Renamed fetch_rows to load_rows in rows.py and report.py.
+
+Test output:
+warning: `VIRTUAL_ENV=/Users/pauleveritt/projects/pauleveritt/mellum-mlx/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+.                                                                        [100%]
+1 passed in 0.00s
+
+All tasks completed.
