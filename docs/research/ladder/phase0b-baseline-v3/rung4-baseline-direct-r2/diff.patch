@@ -1,0 +1,66 @@
+diff --git a/export.py b/export.py
+index 5904d9e..ed31537 100644
+--- a/export.py
++++ b/export.py
+@@ -1,5 +1,17 @@
+ from render import render_rows
++from totals import column_totals
+ 
+-
+-def export_csv(rows):
+-    return "\n".join(render_rows(rows))
++def export_csv(rows, totals=False):
++    if totals:
++        # Compute total row
++        totals_row_vals = column_totals(rows)
++        # Format total row: start with "TOTAL," then each total value
++        total_row = ["TOTAL"] + [str(v) if v != "" else "" for v in totals_row_vals]
++        total_line = ",".join(total_row)
++        # Render the actual rows
++        lines = render_rows(rows)
++        # Append total line
++        lines.append(total_line)
++        return "\n".join(lines)
++    else:
++        return "\n".join(render_rows(rows))
+\ No newline at end of file
+diff --git a/render.py b/render.py
+index f17a074..d0b0860 100644
+--- a/render.py
++++ b/render.py
+@@ -1,2 +1,8 @@
+-def render_rows(rows):
+-    return [",".join(str(v) for v in r) for r in rows]
++def render_rows(rows, mark_last=False):
++    result = []
++    for i, r in enumerate(rows):
++        line = ",".join(str(v) for v in r)
++        if mark_last and i == len(rows) - 1:
++            line = "TOTAL," + line
++        result.append(line)
++    return result
+diff --git a/totals.py b/totals.py
+index 54cd29d..0eb4af8 100644
+--- a/totals.py
++++ b/totals.py
+@@ -1,4 +1,19 @@
+ def column_totals(rows):
+     if not rows:
+         return []
+-    return [sum(r[i] for r in rows) for i in range(len(rows[0]))]
++    num_cols = len(rows[0])
++    totals = []
++    for i in range(num_cols):
++        total = 0
++        has_numeric = False
++        for row in rows:
++            if i < len(row):
++                val = row[i]
++                if isinstance(val, (int, float)):
++                    total += val
++                    has_numeric = True
++        if has_numeric:
++            totals.append(total)
++        else:
++            totals.append("")
++    return totals
