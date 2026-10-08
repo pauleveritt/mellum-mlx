@@ -1,0 +1,3 @@
+{"type": "provider_request", "request": 1, "payload": {"messages": [{"role": "system", "content": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}]}}
+{"type": "tool_call", "toolName": "write", "input": {"path": "export.py", "content": "x\ny\n"}}
+{"type": "tool_result", "toolName": "write", "isError": false, "content": "written"}

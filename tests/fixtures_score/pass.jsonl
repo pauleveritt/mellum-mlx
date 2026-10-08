@@ -1,0 +1,7 @@
+{"type": "provider_request", "request": 1, "payload": {"messages": [{"role": "system", "content": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}]}}
+{"type": "tool_call", "toolName": "read", "input": {"path": "calculator.js"}}
+{"type": "tool_result", "toolName": "read", "isError": false, "content": "..."}
+{"type": "tool_call", "toolName": "edit", "input": {"path": "calculator.js", "oldText": "a", "newText": "b"}}
+{"type": "tool_result", "toolName": "edit", "isError": false, "content": "Edit applied"}
+{"type": "tool_call", "toolName": "bash", "input": {"command": "node --test calculator.test.js"}}
+{"type": "tool_result", "toolName": "bash", "isError": false, "content": "pass 3"}

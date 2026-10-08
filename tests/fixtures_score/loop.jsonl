@@ -1,0 +1,19 @@
+{"type": "provider_request", "request": 1, "payload": {"messages": [{"role": "system", "content": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}]}}
+{"type": "tool_call", "toolName": "read", "input": {"path": "app.py"}}
+{"type": "tool_result", "toolName": "read", "isError": false, "content": "..."}
+{"type": "tool_call", "toolName": "read", "input": {"path": "app.py"}}
+{"type": "tool_result", "toolName": "read", "isError": false, "content": "..."}
+{"type": "tool_call", "toolName": "read", "input": {"path": "app.py"}}
+{"type": "tool_result", "toolName": "read", "isError": false, "content": "..."}
+{"type": "tool_call", "toolName": "read", "input": {"path": "app.py"}}
+{"type": "tool_result", "toolName": "read", "isError": false, "content": "..."}
+{"type": "tool_call", "toolName": "read", "input": {"path": "app.py"}}
+{"type": "tool_result", "toolName": "read", "isError": false, "content": "..."}
+{"type": "tool_call", "toolName": "read", "input": {"path": "app.py"}}
+{"type": "tool_result", "toolName": "read", "isError": false, "content": "..."}
+{"type": "tool_call", "toolName": "edit", "input": {"path": "app.py", "oldText": "zz", "newText": "y"}}
+{"type": "tool_result", "toolName": "edit", "isError": true, "content": "oldString not found in file"}
+{"type": "tool_call", "toolName": "edit", "input": {"path": "app.py", "oldText": "zz", "newText": "y"}}
+{"type": "tool_result", "toolName": "edit", "isError": true, "content": "oldString not found in file"}
+{"type": "tool_call", "toolName": "edit", "input": {"path": "app.py", "oldText": "a", "newText": "a"}}
+{"type": "tool_result", "toolName": "edit", "isError": false, "content": "No changes made to app.py"}
