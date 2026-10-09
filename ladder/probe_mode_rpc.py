@@ -8,11 +8,18 @@ mode, /mellum off, a parent turn, a second off, and the one-shot
 /mellum <task>. Record: docs/research/ladder/ablation-a14-mellum-mode/README.md.
 """
 
-import json, os, subprocess, sys, tempfile, time, threading, queue
+import json
+import os
+import queue
+import subprocess
+import tempfile
+import threading
+import time
 from pathlib import Path
-from ladder.rungs import copy_fixture
+
 from ladder.pi_profile import mirror_agent_dir
-from ladder.run_ladder import MODE_EXT, GUARDS_EXT, RECORD_EXT, child_env
+from ladder.run_ladder import GUARDS_EXT, MODE_EXT, RECORD_EXT, child_env
+from ladder.rungs import copy_fixture
 
 scratch = Path(tempfile.mkdtemp(prefix="mellum-rpc-"))
 ws = copy_fixture("calculator", scratch / "ws")
@@ -48,8 +55,8 @@ def reader():
         if line.startswith("{"):
             try:
                 q.put(json.loads(line))
-            except Exception:
-                pass
+            except json.JSONDecodeError:
+                continue
 
 
 threading.Thread(target=reader, daemon=True).start()
@@ -83,10 +90,11 @@ def model():
 def requests():
     out = []
     if trace.exists():
-        for l in open(trace):
-            e = json.loads(l)
-            if e.get("type") == "provider_request":
-                out.append(e["payload"])
+        with open(trace) as f:
+            for line in f:
+                e = json.loads(line)
+                if e.get("type") == "provider_request":
+                    out.append(e["payload"])
     return out
 
 
@@ -94,15 +102,15 @@ def describe(p):
     ms = p["messages"]
     sysm = ms[0]["content"] if ms and ms[0]["role"] in ("system", "developer") else ""
     users = [m for m in ms if m.get("role") == "user"]
-    return dict(
-        model=p.get("model"),
-        system_is_v5=str(sysm).startswith("<!-- mellum-worker prompt"),
-        system_chars=len(str(sysm)),
-        messages=len(ms),
-        users=len(users),
-        first_user=(str(users[0].get("content"))[:50] if users else None),
-        tools=[t.get("function", t).get("name") for t in p.get("tools", [])],
-    )
+    return {
+        "model": p.get("model"),
+        "system_is_v5": str(sysm).startswith("<!-- mellum-worker prompt"),
+        "system_chars": len(str(sysm)),
+        "messages": len(ms),
+        "users": len(users),
+        "first_user": (str(users[0].get("content"))[:50] if users else None),
+        "tools": [t.get("function", t).get("name") for t in p.get("tools", [])],
+    }
 
 
 wait_for(
@@ -129,7 +137,11 @@ print(
     describe(reqs[-1])["tools"] if reqs else None,
 )
 test = subprocess.run(
-    ["node", "--test", "calculator.test.js"], cwd=ws, capture_output=True, text=True
+    ["node", "--test", "calculator.test.js"],
+    cwd=ws,
+    capture_output=True,
+    text=True,
+    check=False,
 )
 print("   tests exit", test.returncode)
 send({"type": "prompt", "message": "/mellum off"})
