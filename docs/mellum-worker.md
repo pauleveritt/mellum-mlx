@@ -19,8 +19,8 @@ model, given a clean prompt and file tools only, completes bounded tasks.
 So the recipe inverts the roles. Your usual model (DeepSeek Flash here) stays
 the parent with Superpowers and pi-subagents; Mellum is `mellum-worker`, a
 child with `read, grep, find, ls, bash, edit, write`, no skills catalog, no
-bootstrap, no delegation, and a prompt made of facts about its tools and the
-test command.
+bootstrap, no delegation, and a prompt made of facts about the test
+command.
 
 What it is good for, measured: one-line fixes, adding a function with its
 test, a rename across two files, and three-file changes with a named failing
@@ -74,12 +74,16 @@ Project-local; the only change outside the project is the `models.json` entry at
   run as rejected). Nothing else: no `thinking:` (the level never reaches
   oMLX), no `allowedAgents:` (the child has no `subagent` tool to narrow),
   no `defaultContext:` (pi-subagents' default is `fresh`).
-- `prompts/mellum-worker.md` (v4) — the body, duplicated into the agent file;
-  a test keeps them identical. Twelve facts and no procedure: what each tool
-  does, how to find the test command, *the task is complete only when the
-  test command exits 0*, and *if it fails, read, change, run again*. Those two
-  sentences took rung 5 from 0/3 to 3/3 ([phase 0b](research/ladder/phase0b-baseline-v3/README.md));
-  the six-step procedure v3 carried was measured and removed ([ablation A2](research/ladder/ablation-a2-v4a/README.md)).
+- `prompts/mellum-worker.md` (v5, 643 characters) — the body, duplicated
+  into the agent file; a test keeps them identical. One line of role, six
+  facts about the test command, one line for when the files cannot be found.
+  *The task is complete only when the test command exits 0* and *if it
+  fails, read the failure, change the code, and run it again* took rung 5
+  from 0/3 to 3/3 ([phase 0b](research/ladder/phase0b-baseline-v3/README.md)).
+  v3's six-step procedure and five tool descriptions were measured and
+  removed ([A2](research/ladder/ablation-a2-v4a/README.md), [A3](research/ladder/ablation-a3-v4b/README.md));
+  the missing-files line stays because the run without it edited a test
+  ([A4](research/ladder/ablation-a4-v4c/README.md)).
 - `.pi/mellum/mellum-guards.ts` — the child's guards, loaded only through the
   agent file's `subagentOnlyExtensions`. It lives outside `.pi/extensions/`
   on purpose: Pi auto-loads that directory into every session in a trusted
