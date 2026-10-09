@@ -1,4 +1,4 @@
-# Ablation A14: Mellum mode inside the main session
+# Ablation A14: Mellum Mode inside the main session
 
 Date: 2026-10-09. The operator's full profile (Superpowers, pi-subagents,
 context7, the skills catalog), model Mellum, the raw rung sentence as in
@@ -73,9 +73,13 @@ worker. The delegated recipe stays the one with independent verification.
 Three repeats, sampled decoding. The guard extension was loaded in every
 run (the mode always loads it) although these records' `guards` field
 says `False` and the table label omits `+guards`; the runner was corrected
-afterwards. **Only the headless path was measured**: with `MELLUM_MODE=1`
-no on-marker is sent, so the marker logic, `/mellum off`, and the
-compaction guard are covered by unit tests, not by the ladder. Pi loads
+afterwards. **Only the headless path was measured by the ladder**: with
+`MELLUM_MODE=1` no on-marker is sent. The interactive path was then
+exercised over Pi's RPC mode (`ladder/probe_mode_rpc.py`, 2026-10-09): on,
+a second on, a task, off, a parent turn, a second off, and the one-shot
+`/mellum <task>`; each request carried exactly the expected prompt,
+history and tools, and the model was restored. The compaction guard is
+unit-tested. Pi loads
 `-e` extensions before packages, so the filter runs *first* among payload
 hooks and later handlers could re-add content; none of the operator's
 packages hooks `before_provider_request` today. After `/mellum off` the parent's next request carries the

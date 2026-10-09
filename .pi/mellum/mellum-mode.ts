@@ -2,8 +2,9 @@
  * Mellum mode: run the small model inside the main session with the worker's prompt
  * and tools, and show it nothing from before the mode began.
  *
- *   /mellum on   – switch model to Mellum, tools to the worker's seven, mark the start
- *   /mellum off  – restore the previous model and tools
+ *   /mellum <task>  – one shot: switch to Mellum, run the task, switch back when settled
+ *   /mellum on      – stay on for several turns (switch model, tools, mark the start)
+ *   /mellum off     – restore the previous model and tools
  *
  * While on, before_provider_request rewrites the outgoing payload: the system message
  * becomes the worker prompt (prompts/mellum-worker.md, or $MELLUM_MODE_PROMPT), and the
@@ -148,14 +149,31 @@ export default function (pi: any) {
 		ctx.ui?.notify?.("mellum-mode off", "info");
 	}
 
+	let oneShot = false;
+
 	pi.registerCommand("mellum", {
-		description: "mellum on|off — run Mellum with the worker prompt and tools inside this session",
+		description: "mellum <task> | on | off — run Mellum with the worker prompt and tools inside this session",
 		handler: async (args: string, ctx: any) => {
 			const want = (args || "").trim();
 			if (want === "off") return deactivate(ctx);
 			if (want === "on" || want === "") return activate(ctx);
-			ctx.ui?.notify?.("usage: /mellum on|off", "warning");
+			// One shot: the task runs under the mode and the mode ends when the agent settles.
+			if (active) {
+				ctx.ui?.notify?.("mellum-mode is already on; type the task as a normal prompt, or /mellum off first", "warning");
+				return;
+			}
+			await activate(ctx);
+			if (!active) return;
+			oneShot = true;
+			pi.sendUserMessage(want);
 		},
+	});
+
+	pi.on("agent_settled", async (_event: any, ctx: any) => {
+		if (active && oneShot) {
+			oneShot = false;
+			await deactivate(ctx);
+		}
 	});
 
 	pi.on("session_start", async (_event: any, ctx: any) => {

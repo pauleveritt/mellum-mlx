@@ -1,4 +1,4 @@
-# Mellum 2.1 as a worker agent under Pi
+# Mellum Worker and Mellum Mode: Mellum 2.1 as a coding worker under Pi
 
 **Status: shipped 2026-10-09; two ways to use the worker (§4 delegated, §4b in-session), both measured. Follow-ups are scheduled in [2026-10-09-future-work.md](research/2026-10-09-future-work.md). Every number links to its record under `docs/research/ladder/`; the lean-down that produced the shipped worker is summarised in [ablation-summary.md](research/ladder/ablation-summary.md).**
 
@@ -31,9 +31,9 @@ on its own (see the ladder results below).
 
 Serve `Mellum2.1-12B-A2.5B-Thinking-6bit` on oMLX 0.6.4 as in the main
 [README](../README.md). The converted model is published at
-<https://huggingface.co/pauleveritt/Mellum2.1-12B-A2.5B-Thinking-6bit>
+<https://huggingface.co/pauleveritt/Mellum2.1-12B-A2.5B-Thinking-mlx-6bit>
 (9.9 GB, two safetensors shards, MLX 6-bit), so it can be pulled with
-`hf download pauleveritt/Mellum2.1-12B-A2.5B-Thinking-6bit` instead of
+`hf download pauleveritt/Mellum2.1-12B-A2.5B-Thinking-mlx-6bit` instead of
 converted. Settings: 56,000-token context window, native hybrid cache,
 cache quantization off, one concurrent request.
 
@@ -122,7 +122,7 @@ then `cd` there, start `pi`, and say *Use mellum-worker to do this: the cart
 total ignores quantity, fix it*. Never run the worker inside `fixtures/`
 itself; it edits in place.
 
-## 4. Using the worker
+## 4. Using Mellum Worker (delegated)
 
 In a normal Pi session, name the worker: "Use mellum-worker to do this: …".
 Your parent scopes the task, writes the brief, launches the child, and — in
@@ -195,16 +195,18 @@ where the briefed child needs fewer requests (14 vs 20) and never more than
 request carries. The options for cutting this further, measured and
 projected, are in [2026-10-09-worker-cost-options.md](research/2026-10-09-worker-cost-options.md).
 
-## 4b. The second way: Mellum mode in your own session
+## 4b. The second way: Mellum Mode in your own session
 
-`.pi/mellum/mellum-mode.ts` turns your current session into the worker
-without a parent, a brief, or a subagent:
+**Mellum Mode** (`.pi/mellum/mellum-mode.ts`) turns your current session
+into the worker without a parent, a brief, or a subagent:
 
 ```bash
 pi -e .pi/mellum/mellum-mode.ts -e .pi/mellum/mellum-guards.ts
 ```
 
-then `/mellum on`, type the task, and `/mellum off` when done. While the
+then `/mellum <task>`: the session switches to Mellum, runs the task, and
+switches back when the agent settles. For a longer back-and-forth use
+`/mellum on`, type as many prompts as you like, and `/mellum off`. While the
 mode is on, the model is Mellum, the tools are the worker's seven, and
 every request is rewritten before it leaves: the system prompt is v5, the
 messages are only those since `/mellum on` (Superpowers' bootstrap and
@@ -219,9 +221,12 @@ prompt instead of 17k, and the wall time is the same (prefill is cached;
 the time is generation). What you give up against delegation is the
 parent's independent test run afterwards; run the tests yourself.
 
-Cautions. Only the headless path has been through the ladder; the
-interactive `/mellum on|off` path (markers, restore, the refusal to
-auto-compact while on) is covered by unit tests. Pi loads `-e` extensions
+Cautions. The ladder measured the headless path; the interactive path
+(`on`, a second `on`, a task, `off`, a parent turn, a second `off`, the
+one-shot form) is exercised by `uv run python -m ladder.probe_mode_rpc`
+over Pi's RPC mode, which showed each request carrying exactly the
+expected prompt, history and tools; the refusal to auto-compact while on
+is unit-tested. Pi loads `-e` extensions
 first, so the filter runs before any package's payload hook; none of
 Superpowers, pi-subagents or context7 rewrites the payload today. Mellum's
 tool results stay in your session, so a long task leaves your usual model
