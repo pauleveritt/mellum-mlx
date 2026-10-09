@@ -24,6 +24,29 @@ of two ways:
   usual model stays the parent, scopes the task, briefs the child, and runs the
   tests itself. 15/15 on the five-rung ladder.
 
+### The numbers
+
+Five coding tasks, three runs each, on an M5 Max through oMLX. "Your
+profile" is the operator's own Pi: Superpowers, pi-subagents, Context7, the
+skills catalog. Prefill is characters sent to the model per run; on this
+cached local server prefill is nearly free and generated tokens are what
+cost time.
+
+| Pi setup | passes | wall s, mean | Mellum requests per run | prefill, k chars per run | your main model per run |
+| --- | --- | --- | --- | --- | --- |
+| bare Pi, Mellum as the agent | 8/15 | 51 | 13.1 | 297 | none |
+| your profile, Mellum as the agent | 10/15 | 72 | 13.7 | 1,055 | none |
+| Mellum Mode (`/mellum`, your profile) | 14/15 | 70 | 13.1 | 237 | none |
+| Mellum Worker (delegated, your profile) | 15/15 | 54 | 11.1 | 221 | 6.5 turns, about 3k output and 120k mostly cached input tokens |
+
+Wall time by rung (seconds): bare Pi 14 / 39 / 22 / 53 / 128; your profile
+55 / 81 / 54 / 84 / 85; Mode 24 / 76 / 31 / 99 / 122; Worker 30 / 38 / 24 / 77 / 99.
+The Worker is not cheaper than Mode; its cost moves to your main model.
+Records: [phase 0c](docs/research/ladder/phase0c-primary-plain/README.md),
+[phase 0c operator](docs/research/ladder/phase0c-primary-operator/README.md),
+[A14](docs/research/ladder/ablation-a14-mellum-mode/README.md),
+[A10](docs/research/ladder/ablation-a10-delegated-v5/README.md).
+
 The worker is a 643-character prompt of facts about the test command, the seven
 file tools, and a guard extension (an empty-turn nudge capped at three, a loop
 breaker). Every part was measured in and out; the scoreboard is
