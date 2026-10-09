@@ -1,0 +1,1 @@
+The function `totalCents` computes the cart total but ignores item quantities.

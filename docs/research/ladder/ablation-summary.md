@@ -23,6 +23,8 @@ scorer column that was zero becomes non-zero.
 | [A12](ablation-a12-strip-thinking/README.md) | earlier turns' thinking from each request | 14/15 | **no** | prefill −57% but output tokens +73%, wall 54 → 87 s: the replayed thinking is working memory |
 | [A13](ablation-a13-budget-medium/README.md) | (request-level `thinking_budget` 2,048 via a hook) | 15/15 | inert | reaches the server but is not enforced: oMLX builds the budget processor only with a reasoning parser configured; no forced close in 205 turns |
 | [A14](ablation-a14-mellum-mode/README.md) | (Mellum mode: the worker inside the main session, operator profile) | 14/15 | ships | 10/15 → 14/15 in the same profile at the same sampling; prefill −78%; wall unchanged (prefill is cached); no parent round trip |
+| [A15](ablation-a15-chunked-brief/README.md) | (Markdown brief, one prompt per step in one session) | 15/15 | no | 2.4× the time, 2.5× the output tokens of the sentence; bounded turns did not reduce empty finals |
+| [A16](ablation-a15-chunked-brief/README.md) | (the same brief as one prompt) | 11/15 | no | the model stops at the brief's first "reply" step; a one-prompt brief must not contain intermediate replies |
 
 ## The worker, before and after
 

@@ -1,6 +1,6 @@
 # Mellum 2.1 as a worker agent under Pi
 
-**Status: measured recipe, 2026-10-09. Every number links to its record under `docs/research/ladder/`; the lean-down that produced the shipped worker is summarised in [ablation-summary.md](research/ladder/ablation-summary.md).**
+**Status: shipped 2026-10-09; two ways to use the worker (§4 delegated, §4b in-session), both measured. Follow-ups are scheduled in [2026-10-09-future-work.md](research/2026-10-09-future-work.md). Every number links to its record under `docs/research/ladder/`; the lean-down that produced the shipped worker is summarised in [ablation-summary.md](research/ladder/ablation-summary.md).**
 
 This is the practical recipe that came out of the research in
 [docs/research/](research/): run the local Mellum 2.1 model not as the agent
@@ -266,6 +266,11 @@ Not settled:
 - **The nudge does not fire inside a pi-subagents child.** Zero nudges in
   sixty delegated runs while eleven children "produced no output"; the
   parent's re-dispatch is what recovers them. First backlog item.
+- The Markdown brief as a mediator: chunked into one prompt per step it
+  passes everything at 2.4× the cost; as one prompt with step-wise
+  "reply" instructions it drops to 11/15 because the model stops at the
+  first reply ([A15/A16](research/ladder/ablation-a15-chunked-brief/README.md)).
+  The sentence plus the worker prompt stays the cheapest reliable input.
 - pi-subagents appends an "Intercom orchestration channel" block (about
   2,000 characters) to the child prompt even with `contact_supervisor`
   excluded; the worker ignores it.

@@ -1,0 +1,29 @@
+diff --git a/ledger.py b/ledger.py
+index e66e869..bff7d97 100644
+--- a/ledger.py
++++ b/ledger.py
+@@ -13,3 +13,6 @@ def entries_from_lines(lines):
+         memo, amount = line.rsplit(",", 1)
+         out.append(Entry(memo.strip(), int(amount)))
+     return out
++
++def balance(entries):
++    return sum(entry.amount for entry in entries)
+diff --git a/test_ledger.py b/test_ledger.py
+index 6c67281..618aef5 100644
+--- a/test_ledger.py
++++ b/test_ledger.py
+@@ -1,4 +1,4 @@
+-from ledger import Entry, entries_from_lines
++from ledger import Entry, entries_from_lines, balance
+ 
+ 
+ def test_parses_lines():
+@@ -6,3 +6,7 @@ def test_parses_lines():
+         Entry("coffee", -3),
+         Entry("pay", 10),
+     ]
++
++def test_balance():
++    entries = entries_from_lines(["coffee, -3", "pay, 10"])
++    assert balance(entries) == 7

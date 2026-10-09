@@ -47,6 +47,13 @@ in the operator's own profile, same sampling, 10/15 → 14/15, rung 5 from
 0/3 to 3/3, prefill −78%, wall time unchanged (70 vs 72 s). Recommendation
 2 is done; it ships as `/mellum on|off`.
 
+**Measured after (A15/A16):** the Markdown track. Chunked (one prompt
+per step, one session) passes 15/15 at 2.4× the time and 2.5× the output
+tokens; the same brief as one prompt drops to 11/15 because the model
+stops at the first mid-brief "reply" step. Neither ships. The sentence
+plus the v5 prompt stays the cheapest reliable input; the "no steps" brief
+shape and verification between steps remain unmeasured.
+
 ## 2. Minor modifications to the current recipe
 
 | change | measured? | effect | cost to adopt |
