@@ -106,6 +106,8 @@ def score(
                         "temperature",
                         "top_p",
                         "top_k",
+                        "min_p",
+                        "seed",
                         "max_tokens",
                         "presence_penalty",
                     )

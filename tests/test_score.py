@@ -165,6 +165,8 @@ def test_effective_params_come_from_the_first_request():
                 "temperature": 1,
                 "top_p": 0.95,
                 "top_k": 20,
+                "min_p": 0,
+                "seed": 42,
                 "max_tokens": 16384,
                 "presence_penalty": 0,
                 "messages": [],
@@ -177,6 +179,8 @@ def test_effective_params_come_from_the_first_request():
         "temperature": 1,
         "top_p": 0.95,
         "top_k": 20,
+        "min_p": 0,
+        "seed": 42,
         "max_tokens": 16384,
         "presence_penalty": 0,
     }

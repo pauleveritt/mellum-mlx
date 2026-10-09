@@ -1,6 +1,12 @@
 from pathlib import Path
 
-SKILL = Path(__file__).resolve().parent.parent / ".pi" / "skills" / "delegate-to-mellum" / "SKILL.md"
+SKILL = (
+    Path(__file__).resolve().parent.parent
+    / ".pi"
+    / "skills"
+    / "delegate-to-mellum"
+    / "SKILL.md"
+)
 
 
 def test_skill_has_frontmatter_and_the_brief_template():
