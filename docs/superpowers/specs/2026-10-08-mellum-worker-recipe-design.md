@@ -23,9 +23,12 @@ The recovery report at
 and the four briefs beside it settle these points; this design does not
 re-litigate them.
 
-- Whole-document 50k-token literal retrieval is a capability ceiling of the
-  original checkpoint (2.5B active parameters, 4 KV heads, 21 of 28 layers
-  sliding-window). Not conversion, not MLX, not oMLX.
+- Whole-document 50k-token literal retrieval on the original failing
+  document fails with the original BF16 weights in MLX and in llama.cpp as
+  well as with Q6, so it is not conversion, MLX, or oMLX. Other 50k controls
+  pass and the two runtimes disagree on one moved-constant control, so the
+  research calls this a limitation under the tested prompts and settings,
+  not a proven checkpoint ceiling.
 - The agent-loop failures (skill names dispatched as agents, retries after
   explicit errors, a wrong request ID) were produced by Mellum as the
   *parent* under the Superpowers bootstrap and pi-subagents supervisor

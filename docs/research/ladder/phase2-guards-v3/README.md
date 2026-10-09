@@ -12,7 +12,7 @@ non-zero. After 45 runs with prompt v3 (phases 0b, 1, 1b):
 | column | runs | guard | decision |
 | --- | --- | --- | --- |
 | `write_shrink` (fragment-as-whole-file clobber) | 0 | new-file-only `write` | **dormant** |
-| identical call repeated ≥ 5 times within the breaker's 20-call window (`max_identical_in_window`) | 4 of 105 runs across all phases, three of which passed | loop breaker | **dormant** — enabling it would have blocked re-reads in passing runs |
+| calls the ported loop breaker would refuse, replayed with its exact semantics (`loop_breaker_would_block`) | 1 of 105 runs: the 66-request thrash (5 r3), 3 calls, a failed run; no passing run touched | loop breaker | **dormant**, but the evidence now argues for it — it would have cut the one thrash and cost nothing elsewhere |
 | `deadline_hit` | 0 | step budget | **dormant** |
 | `empty_final` | 7, including all 5 failures | empty-final nudge | **enabled** |
 
@@ -29,14 +29,16 @@ Command:
 uv run python -m ladder.run_ladder --profile baseline --guards --rung 1 --rung 2 --rung 3 --rung 4 --rung 5 --repeat 3 --deadline 600 --out docs/research/ladder/phase2-guards-v3
 ```
 
-A correction made during the final review: the dormancy decision was first
-taken on `max_identical_streak` (adjacent repeats only, largest 2), but the
-ported loop breaker counts repeats of one call anywhere in a 20-call window.
-Rescored with that metric, four runs reach the threshold (phase 0 rung 2 r2,
-phase 0b rung 5 r2, phase 1 rung 3 r2, phase 2 rung 5 r3); three of them
-passed, so the breaker would have refused legitimate re-reads. The decision
-stands on the corrected evidence, and `max_identical_in_window` is now a
-scorer column.
+Two corrections. First (final review): the dormancy decision was taken on
+`max_identical_streak` (adjacent repeats only), but the breaker counts
+repeats within a 20-call window. Second (external review): my rescoring
+counted five occurrences *including* the current call, while the breaker
+refuses a call only when five matches already sit in the window — it blocks
+the sixth. Replayed with the breaker's exact semantics over all 105 traces,
+it would have blocked three calls in exactly one run, the failed 66-request
+thrash, and nothing in any passing run. My earlier statement that it would
+have refused re-reads in passing runs was wrong. `loop_breaker_would_block`
+is now the scorer column, computed by that replay.
 
 ## Result
 
@@ -74,11 +76,17 @@ With three repeats the gate cannot separate 12/15 from 15/15 (phase 0b)
 or 13/15 (phase 1); the empty-final rate itself varied 1–4 per 15 across
 identical configurations. What the three nudged runs do establish:
 
-- The second nudge never helped. `ENABLED.emptyFinalNudge` is therefore set
-  to **1** after this run — a narrowing of a measured guard, not a new
-  guard, and not itself re-measured.
-- A nudge must not run unbounded; the recorded 66-request run is why
-  the cap exists.
+- The second nudge never helped. `ENABLED.emptyFinalNudge` was set to **1**
+  after this run. External review then showed the cap does not bound what a
+  nudge starts: in 5 r3 the first nudge landed at request 33, both heredoc
+  writes at 58–59, and the second nudge only at 64 — thirty-one requests
+  ran under a single nudge. A cap of one is therefore not a bounded remedy;
+  the continuation itself needs a request or progress bound, and the
+  one-nudge configuration has not been measured. **The nudge is
+  experimental**, kept on through phase 3 so the delegated runs are paired,
+  and to be made dormant (or bounded and re-measured) after them.
+- The "lapse versus stall" reading assigns causes the experiment did not
+  establish; it is an interpretation of three runs, not a finding.
 
 **Where the empty-final problem actually belongs.** In the real recipe the
 worker is a child of a parent session. A parent that reads the child's

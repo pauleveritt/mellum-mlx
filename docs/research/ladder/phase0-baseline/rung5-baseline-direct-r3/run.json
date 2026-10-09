@@ -48,7 +48,15 @@
     "max_identical_streak": 1,
     "write_shrink": 0,
     "nudges": 0,
-    "max_identical_in_window": 3
+    "max_identical_in_window": 3,
+    "loop_breaker_would_block": 0,
+    "effective_params": {
+      "temperature": 1,
+      "top_p": 0.95,
+      "top_k": 20,
+      "max_tokens": 16384,
+      "presence_penalty": 0
+    }
   },
   "diff_stat": " export.py | 10 ++++++++--\n totals.py |  9 ++++++++-\n 2 files changed, 16 insertions(+), 3 deletions(-)\n",
   "files_created": [],

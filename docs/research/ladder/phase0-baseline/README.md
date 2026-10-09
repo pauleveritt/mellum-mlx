@@ -3,11 +3,12 @@
 Date: 2026-10-08. Worker prompt v2, no guards. Model
 `omlx/Mellum2.1-12B-A2.5B-Thinking-6bit` on oMLX 0.6.4 with the **baseline**
 profile (`max_tokens 4096`, thinking budget off, presence penalty 0, no
-tool-result cap). Pi 1.0.2 in the recovery report's clean profile
+tool-result cap — of which only the server-side settings were effective; see
+the sampling note below). Pi 1.0.2 in the recovery report's clean profile
 (`pi -p --mode json --no-extensions --no-skills --no-context-files --no-session
 --thinking high --tools read,grep,find,ls,bash,edit,write
 --append-system-prompt prompts/mellum-worker.md -e ladder/record-pi.js`).
-Three greedy repeats per rung, 600 s deadline.
+All requests were sampled, not greedy: Pi sent `temperature 1`, `top_p 0.95`, `top_k 20`, `max_tokens 16384`, `presence_penalty 0` on every request, and oMLX gives request values precedence over the model profile. Three repeats per rung. 600 s deadline.
 
 Command:
 

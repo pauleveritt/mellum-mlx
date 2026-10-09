@@ -44,10 +44,10 @@ def summarize(directory: Path) -> dict:
         for column in PATHOLOGY_COLUMNS:
             if record["score"].get(column):
                 nonzero[column] = nonzero.get(column, 0) + 1
-        for metric in ("max_identical_streak", "max_identical_in_window"):
-            if record["score"].get(metric, 0) >= STREAK_THRESHOLD:
-                key = f"{metric}>={STREAK_THRESHOLD}"
-                nonzero[key] = nonzero.get(key, 0) + 1
+        if record["score"].get("loop_breaker_would_block"):
+            nonzero["loop_breaker_would_block"] = (
+                nonzero.get("loop_breaker_would_block", 0) + 1
+            )
         if record.get("deadline_hit"):
             nonzero["deadline_hit"] = nonzero.get("deadline_hit", 0) + 1
         if "final_text_chars" in record and not record["final_text_chars"]:

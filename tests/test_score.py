@@ -155,3 +155,38 @@ def test_max_identical_in_window_counts_non_adjacent_repeats_like_the_loop_break
     s = score(calls, set(), {})
     assert s.max_identical_streak == 1
     assert s.max_identical_in_window == 6
+
+
+def test_effective_params_come_from_the_first_request():
+    events = [
+        {
+            "type": "provider_request",
+            "payload": {
+                "temperature": 1,
+                "top_p": 0.95,
+                "top_k": 20,
+                "max_tokens": 16384,
+                "presence_penalty": 0,
+                "messages": [],
+            },
+        },
+        {"type": "provider_request", "payload": {"temperature": 0, "messages": []}},
+    ]
+    s = score(events, set(), {})
+    assert s.effective_params == {
+        "temperature": 1,
+        "top_p": 0.95,
+        "top_k": 20,
+        "max_tokens": 16384,
+        "presence_penalty": 0,
+    }
+
+
+def test_loop_breaker_would_block_replays_the_real_guard():
+    # Six identical calls: the ported breaker admits five and blocks the sixth.
+    calls = [
+        {"type": "tool_call", "toolName": "read", "input": {"path": "a"}}
+        for _ in range(6)
+    ]
+    assert score(calls[:5], set(), {}).loop_breaker_would_block == 0
+    assert score(calls, set(), {}).loop_breaker_would_block == 1

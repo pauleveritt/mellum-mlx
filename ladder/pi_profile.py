@@ -30,7 +30,9 @@ def mirror_agent_dir(source: Path, dest: Path, trusted: list[Path]) -> Path:
     for name in LINKED_DIRS:
         if (source / name).exists():
             os.symlink(source / name, dest / name, target_is_directory=True)
-    (dest / "trust.json").write_text(json.dumps({str(p): True for p in trusted}, indent=2))
+    (dest / "trust.json").write_text(
+        json.dumps({str(p): True for p in trusted}, indent=2)
+    )
     return dest
 
 
@@ -39,8 +41,15 @@ def prepare_pi_workspace(ws: Path, record_ext: Path, skill: bool) -> Path:
     pi = ws / ".pi"
     (pi / "agents").mkdir(parents=True, exist_ok=True)
     (pi / "extensions").mkdir(exist_ok=True)
-    shutil.copy2(ROOT / ".pi" / "extensions" / "mellum-guards.ts", pi / "extensions" / "mellum-guards.ts")
-    lines = (ROOT / ".pi" / "agents" / "mellum-worker.md").read_text().splitlines(keepends=True)
+    shutil.copy2(
+        ROOT / ".pi" / "extensions" / "mellum-guards.ts",
+        pi / "extensions" / "mellum-guards.ts",
+    )
+    lines = (
+        (ROOT / ".pi" / "agents" / "mellum-worker.md")
+        .read_text()
+        .splitlines(keepends=True)
+    )
     rewritten = [
         f"subagentOnlyExtensions: ./.pi/extensions/mellum-guards.ts, {record_ext}\n"
         if line.startswith("subagentOnlyExtensions:")
@@ -49,5 +58,8 @@ def prepare_pi_workspace(ws: Path, record_ext: Path, skill: bool) -> Path:
     ]
     (pi / "agents" / "mellum-worker.md").write_text("".join(rewritten))
     if skill:
-        shutil.copytree(ROOT / ".pi" / "skills" / "delegate-to-mellum", pi / "skills" / "delegate-to-mellum")
+        shutil.copytree(
+            ROOT / ".pi" / "skills" / "delegate-to-mellum",
+            pi / "skills" / "delegate-to-mellum",
+        )
     return pi

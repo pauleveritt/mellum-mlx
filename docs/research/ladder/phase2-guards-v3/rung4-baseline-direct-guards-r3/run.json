@@ -56,7 +56,15 @@
     "max_identical_streak": 1,
     "write_shrink": 0,
     "nudges": 0,
-    "max_identical_in_window": 2
+    "max_identical_in_window": 2,
+    "loop_breaker_would_block": 0,
+    "effective_params": {
+      "temperature": 1,
+      "top_p": 0.95,
+      "top_k": 20,
+      "max_tokens": 16384,
+      "presence_penalty": 0
+    }
   },
   "diff_stat": " export.py | 10 ++++++++--\n render.py |  8 ++++++--\n totals.py | 10 +++++++++-\n 3 files changed, 23 insertions(+), 5 deletions(-)\n",
   "files_created": [],

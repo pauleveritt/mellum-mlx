@@ -44,7 +44,7 @@ def test_summarize_counts_passes_and_flags_nonzero_columns(tmp_path):
     s = summarize(tmp_path)
     assert s["rungs"][1]["passed"] == 2 and s["rungs"][1]["runs"] == 3
     assert s["rungs"][2]["passed"] == 1
-    assert s["nonzero"] == {"write_existing": 1, "max_identical_streak>=5": 1}
+    assert s["nonzero"] == {"write_existing": 1}
 
 
 def test_comparison_table_has_a_row_per_rung(tmp_path):
@@ -65,9 +65,9 @@ def test_summarize_flags_empty_final_and_non_stop(tmp_path):
     assert summarize(tmp_path)["nonzero"] == {"empty_final": 1, "stop_reason!=stop": 1}
 
 
-def test_summarize_flags_window_repeats_the_loop_breaker_would_see(tmp_path):
-    write_runs(tmp_path, [rec(1, True, max_identical_in_window=5), rec(1, True)])
-    assert summarize(tmp_path)["nonzero"] == {"max_identical_in_window>=5": 1}
+def test_summarize_flags_runs_the_loop_breaker_would_have_blocked(tmp_path):
+    write_runs(tmp_path, [rec(1, True, loop_breaker_would_block=3), rec(1, True)])
+    assert summarize(tmp_path)["nonzero"] == {"loop_breaker_would_block": 1}
 
 
 def test_summarize_flags_runs_where_the_parent_did_not_delegate(tmp_path):

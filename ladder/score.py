@@ -24,6 +24,7 @@ _WRITING_COMMAND = re.compile(
 
 
 LOOP_WINDOW = 20
+LOOP_THRESHOLD = 5
 
 
 def bash_mutates(command: str) -> bool:
@@ -61,6 +62,14 @@ class Score:
     # Repeats of one call within the loop breaker's 20-call window: the metric
     # the guard uses, as opposed to max_identical_streak (adjacent only).
     max_identical_in_window: int = 0
+    # Calls the ported loop breaker would have blocked, replayed with its exact
+    # semantics: a call is refused when five matches already sit in the window
+    # of admitted calls, and a refused call does not enter the window.
+    loop_breaker_would_block: int = 0
+    # Sampling and cap values the client actually sent on the first request.
+    # oMLX gives these precedence over the model profile, so they, not the
+    # profile, are the effective settings.
+    effective_params: dict = field(default_factory=dict)
 
     def as_row(self) -> dict:
         row = asdict(self)
@@ -84,11 +93,24 @@ def score(
     streak = 0
     last_key = None
     window: list[str] = []
+    admitted: list[str] = []
     for event in events:
         kind = event.get("type")
         if kind == "provider_request":
             result.requests += 1
             payload = event.get("payload", {})
+            if not result.effective_params:
+                result.effective_params = {
+                    k: payload[k]
+                    for k in (
+                        "temperature",
+                        "top_p",
+                        "top_k",
+                        "max_tokens",
+                        "presence_penalty",
+                    )
+                    if k in payload
+                }
             size = len(json.dumps(payload))
             result.largest_prompt_chars = max(result.largest_prompt_chars, size)
             nudges = sum(
@@ -110,6 +132,11 @@ def score(
             result.max_identical_in_window = max(
                 result.max_identical_in_window, window.count(key)
             )
+            if admitted.count(key) >= LOOP_THRESHOLD:
+                result.loop_breaker_would_block += 1
+            else:
+                admitted.append(key)
+                del admitted[:-LOOP_WINDOW]
             if name == "write":
                 path = _path(payload)
                 if path and path in baseline_paths:

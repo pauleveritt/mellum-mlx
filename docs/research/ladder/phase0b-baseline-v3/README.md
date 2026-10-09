@@ -59,5 +59,5 @@ the tuned profile costs or buys anything, not whether it rescues failures.
 
 ## Caveat
 
-Three greedy repeats per rung. The profile and prompt are fixed; the fixtures
-are small. This is a gate, not an error rate.
+All requests were sampled, not greedy: Pi sent `temperature 1`, `top_p 0.95`, `top_k 20`, `max_tokens 16384`, `presence_penalty 0` on every request, and oMLX gives request values precedence over the model profile. Three repeats per rung. The profile and prompt are fixed; the fixtures are small. This is a
+gate, not an error rate.

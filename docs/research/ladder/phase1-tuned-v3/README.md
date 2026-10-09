@@ -42,10 +42,23 @@ uv run python -m ladder.run_ladder --profile tuned --rung 1 --rung 2 --rung 3 --
 | deadline hits | 0 | 0 |
 | mean wall seconds (untrusted) | 61 | 49 |
 
+## Correction (external review, 2026-10-08)
+
+The `max_tokens` and `presence_penalty` rows above were **not effective**.
+Every request Pi sent carried `max_tokens: 16384` and `presence_penalty: 0`
+(1,534 of 1,534 across all phases), and oMLX gives request values
+precedence over the model profile; a message in the baseline phase reached
+5,033 output tokens. The only settings that actually differed between
+baseline and tuned were the server-side ones: thinking budget, tool-result
+cap, and forced thinking. The clamp check below is therefore uninformative:
+the request was short. Every run in every phase was sampled at
+`temperature 1, top_p 0.95, top_k 20`, not greedy. A comparison with the
+profiles applied at the request level is queued as a follow-up.
+
 ## Reading
 
-**The tuned profile bought nothing the ladder can see and may have cost two
-runs.** Both tuned failures (4 r1, 5 r3) are the empty-final stop: a partial
+**The server-side settings that did apply bought nothing the ladder can see
+and may have cost two runs.** Both tuned failures (4 r1, 5 r3) are the empty-final stop: a partial
 edit, a read, then `stopReason: stop` with no visible text — the same
 pathology as the baseline's single empty final (3 r3, which happened to pass
 because the work was already done). Three repeats cannot separate 13/15 from
@@ -66,9 +79,9 @@ What each setting did or did not do:
 - **`max_tool_result_tokens` 4,000.** Largest prompts were smaller
   (52k vs 76k chars), consistent with truncated tool results, with no
   effect on pass/fail.
-- **Presence penalty 0.5.** The one setting with a plausible mechanism for
-  *earlier* stops: it penalises every token already in the context,
-  including tool-call scaffolding. Isolated in the variant below.
+- **Presence penalty 0.5.** Never applied (request precedence, above). The
+  variant below therefore compares two effectively identical configurations
+  and is a measurement of run-to-run variance, not of the penalty.
 
 ## Clamp check
 
@@ -103,14 +116,15 @@ and were deleted.
 | mean requests | 14.3 | 15.1 | 11.7 |
 | edit anchor failures | 5 | 7 | 0 |
 
-12 of 15 without the penalty. The presence penalty is not the cause of the
-tuned failures. Every failure across the three profiles (5 of 45 runs) is
-the same event — a turn ending with `stopReason: stop` and no visible text,
-part-way through the task — and its count per profile (1, 2, 4) is within
-what three repeats produce by chance. **Conclusion: on these rungs the
-server profile neither helps nor hurts; the empty-final stop is a model
-behaviour independent of output cap, thinking budget, tool-result cap, and
-presence penalty.** It is the phase-2 target.
+12 of 15 "without the penalty" — but the penalty was never in effect in
+either run, so tuned (13/15) and this variant (12/15) are the same effective
+configuration run twice: a direct estimate of noise at n = 3. Every failure
+across the three phases (5 of 45 runs) is the same event — a turn ending
+with `stopReason: stop` and no visible text, part-way through the task.
+**Defensible conclusion: the empty-final stop occurs across every tested
+configuration, and none of the settings that actually applied showed a
+benefit. Independence from output cap or presence penalty is not
+established, because neither was tested.** It is the phase-2 target.
 
 The 16k output and the thinking budget remain reasonable insurance for
 larger tasks than these fixtures; the ladder has no evidence either way at
