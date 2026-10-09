@@ -42,7 +42,7 @@ export const ENABLED: {
 	loopBreaker?: boolean;
 	stepBudget?: number;
 	emptyFinalNudge?: number;
-} = { emptyFinalNudge: 2 };
+} = { emptyFinalNudge: 1 };
 
 export const NUDGE_TEXT =
 	"[mellum-guard] Your last turn ended with no reply and no tool call. " +

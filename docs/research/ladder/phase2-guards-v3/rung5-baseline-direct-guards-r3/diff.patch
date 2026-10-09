@@ -1,0 +1,17 @@
+diff --git a/export.py b/export.py
+index 5904d9e..50ba71f 100644
+--- a/export.py
++++ b/export.py
+@@ -1,5 +1,9 @@
+ from render import render_rows
++from totals import column_totals
+ 
+ 
+-def export_csv(rows):
+-    return "\n".join(render_rows(rows))
++def export_csv(rows, totals=False):
++    if totals:
++        total_row = ["TOTAL"] + column_totals(rows)
++        rows = rows + [total_row]
++    return "\n".join(render_rows(rows)))
+\ No newline at end of file
