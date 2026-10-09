@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import signal
 import subprocess
@@ -28,11 +29,19 @@ from .score import score
 ROOT = Path(__file__).resolve().parent.parent
 PROMPT_FILE = ROOT / "prompts" / "mellum-worker.md"
 RECORD_EXT = ROOT / "ladder" / "record-pi.js"
-GUARDS_EXT = ROOT / ".pi" / "extensions" / "mellum-guards.ts"
+GUARDS_EXT = ROOT / ".pi" / "mellum" / "mellum-guards.ts"
 MODEL = "omlx/Mellum2.1-12B-A2.5B-Thinking-6bit"
 MODEL_ID = MODEL.split("/", 1)[1]
 TOOLS = "read,grep,find,ls,bash,edit,write"
-PROMPT_VERSION = "v4"
+
+
+def prompt_version(prompt: Path) -> str:
+    """The version named in the prompt file's first-line marker, else its stem."""
+    first = prompt.read_text().splitlines()[0] if prompt.exists() else ""
+    found = re.search(r"prompt (v\w+)", first)
+    return found.group(1) if found else prompt.stem
+
+
 PARENT_PROMPT = "Use mellum-worker to do this: {sentence}"
 
 HEADER = (
@@ -329,12 +338,16 @@ def run_once(
         "guards_env": json.loads(os.environ["MELLUM_GUARDS"])
         if os.environ.get("MELLUM_GUARDS")
         else None,
-        "prompt_version": PROMPT_VERSION,
-        "prompt_file": str(prompt.relative_to(ROOT))
-        if prompt.is_relative_to(ROOT)
-        else str(prompt),
-        "prompt_mode": prompt_mode,
-        "thinking": thinking,
+        "prompt_version": prompt_version(prompt) if mode == "direct" else None,
+        "prompt_file": (
+            str(prompt.relative_to(ROOT))
+            if prompt.is_relative_to(ROOT)
+            else str(prompt)
+        )
+        if mode == "direct"
+        else None,
+        "prompt_mode": prompt_mode if mode == "direct" else None,
+        "thinking": thinking if mode == "direct" else None,
         "versions": versions,
         "sentence": rung.sentence,
         "started": started,

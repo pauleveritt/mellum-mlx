@@ -19,8 +19,8 @@ The one failure (rung 5 r1) is the worst kind: the model edited
 check fails any run that changes a test. This is the only test edit by
 the worker in 229 direct runs; bare Pi did it once in fifteen.
 
-**Reverted**, and moot in any case because A3 was reverted: v4c is a
-subset of v4b. Noted for the record: with only the completion facts, the
-worker's path to "exit 0" once ran through the test file. v4a's tool facts
-and missing-files line stand between the model and that shortcut, or three
-repeats were kind; either way the lean prompt is v4a.
+**Reverted.** With only the completion facts, the worker's path to
+"exit 0" once ran through the test file. The one line v4b has and v4c
+lacks ("if the files for the task cannot be found, reply with what is
+missing and stop") stands between the model and that shortcut, or three
+repeats were kind; either way it stays, and the lean prompt is v4b (v5).

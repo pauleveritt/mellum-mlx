@@ -43,10 +43,10 @@ def prepare_pi_workspace(ws: Path, record_ext: Path) -> Path:
     """Give a scratch workspace the worker definition with the ladder recorder appended."""
     pi = ws / ".pi"
     (pi / "agents").mkdir(parents=True, exist_ok=True)
-    (pi / "extensions").mkdir(exist_ok=True)
+    (pi / "mellum").mkdir(exist_ok=True)
     shutil.copy2(
-        ROOT / ".pi" / "extensions" / "mellum-guards.ts",
-        pi / "extensions" / "mellum-guards.ts",
+        ROOT / ".pi" / "mellum" / "mellum-guards.ts",
+        pi / "mellum" / "mellum-guards.ts",
     )
     lines = (
         (ROOT / ".pi" / "agents" / "mellum-worker.md")
@@ -54,7 +54,7 @@ def prepare_pi_workspace(ws: Path, record_ext: Path) -> Path:
         .splitlines(keepends=True)
     )
     rewritten = [
-        f"subagentOnlyExtensions: ./.pi/extensions/mellum-guards.ts, {record_ext}\n"
+        f"subagentOnlyExtensions: ./.pi/mellum/mellum-guards.ts, {record_ext}\n"
         if line.startswith("subagentOnlyExtensions:")
         else line
         for line in lines

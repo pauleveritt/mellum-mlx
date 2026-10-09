@@ -194,3 +194,19 @@ def test_loop_breaker_would_block_replays_the_real_guard():
     ]
     assert score(calls[:5], set(), {}).loop_breaker_would_block == 0
     assert score(calls, set(), {}).loop_breaker_would_block == 1
+
+
+def test_loop_breaker_replay_forgets_repeats_after_a_mutating_call():
+    """The shipped breaker resets on edit/write/bash; the replay must match it or the column lies."""
+    read = {"type": "tool_call", "toolName": "read", "input": {"path": "x"}}
+    edit = {
+        "type": "tool_call",
+        "toolName": "edit",
+        "input": {"path": "x", "edits": []},
+    }
+    assert (
+        score([read] * 5 + [edit] + [read] * 5, set(), {}).loop_breaker_would_block == 0
+    )
+    assert (
+        score([read] * 5 + [edit] + [read] * 6, set(), {}).loop_breaker_would_block == 1
+    )

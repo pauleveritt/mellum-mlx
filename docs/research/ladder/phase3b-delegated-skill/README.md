@@ -5,7 +5,7 @@ except that the scratch workspace carries `.pi/skills/delegate-to-mellum/SKILL.m
 which Pi lists in the parent's skills catalog. Nothing forces the parent to
 read it. Three repeats per rung.
 
-Command:
+Command (historical: `--skill` and the skill were removed in the lean-down; rerun from a checkout before `e9ab783`):
 
 ```bash
 uv run python -m ladder.run_ladder --mode delegated --skill --profile baseline --guards --rung 1 --rung 2 --rung 3 --rung 4 --rung 5 --repeat 3 --deadline 900 --out docs/research/ladder/phase3b-delegated-skill

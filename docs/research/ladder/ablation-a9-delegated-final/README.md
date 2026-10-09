@@ -1,4 +1,4 @@
-# Ablation A9: delegated confirmation of the worker as it ships
+# Ablation A9: delegated confirmation of the lean worker (prompt v4)
 
 Date: 2026-10-09. [A8](../ablation-a8-delegated-lean/README.md) again, with
 the agent file in its final form: prompt v4, `excludeTools: contact_supervisor`
@@ -51,13 +51,16 @@ message before an `agent_before_settle` continuation can act, or does not
 forward that hook to children at all; the source has no reference to it.
 
 So in the delegated recipe the recovery is the *parent's* re-dispatch,
-which worked in nine of the eleven occurrences (58/60 passes across the
-four delegated phases), not the extension's nudge. The extension's nudge
+which worked in ten of the eleven occurrences (58/60 passes across the
+four delegated phases; the other miss was an async launch), not the
+extension's nudge. The extension's nudge
 is a direct-mode guard. Making the empty turn recoverable inside the child
-under pi-subagents is the first item on the backlog; until then the
-worker's description should tell the parent what the skill used to:
-re-dispatch once on "produced no output".
+under pi-subagents is the first item on the backlog, with a cheaper
+alternative beside it: the worker's advertised description could tell the
+parent what the skill used to ("re-dispatch once on 'produced no output'").
+Neither is done; the parents here did it unprompted.
 
-**Decision:** the worker ships as measured here. 14/15 is within one of
+**Decision (superseded by A10):** the worker was to ship as measured here;
+the review then reopened A3 and prompt v5 was confirmed in A10. 14/15 is within one of
 the reference and the one failure is the known pathology with the parent
 behaving correctly.

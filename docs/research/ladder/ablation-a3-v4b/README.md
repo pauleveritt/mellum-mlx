@@ -20,13 +20,14 @@ MELLUM_GUARDS='{"emptyFinalNudge":3,"loopBreaker":true}' uv run python -m ladder
 | nudges | 0 | 2 |
 | `loop_breaker_would_block` | 0 | **2** (rung 4 r2: `export.py` read seven times in a window of twenty) |
 
-Passes hold, but a column that was zero in the reference went non-zero:
-rung 4 r2 re-read the same file seven times, took 27 requests and two
-nudges, and the loop breaker's exact replay would have refused two calls.
-Anchor failures returned (0 → 3), which is the one tool fact with a
-plausible mechanism: "the old text must match the file byte for byte".
+Passes hold. At the time, the `loop_breaker_would_block` column went
+0 → 2 (rung 4 r2 re-read `export.py` seven times, twice after editing it),
+and the step was reverted under the rule. The whole-branch review then
+found the breaker counted re-reads after an edit as repeats, which is not a
+loop; corrected (repeats forgotten after any edit, write, or bash call) and
+replayed over all runs, the column is zero everywhere, including here. The
+remaining movements (nudges 0 → 2, anchor failures 0 → 3) are inside the
+floor A5 measured between identical runs.
 
-**Reverted under the regression rule** (no zero column may go non-zero).
-The tool facts cost 490 characters and appear to buy fewer re-reads and
-cleaner edits. The pass count alone would have kept it; the rule is there
-for exactly this case.
+**Kept, after the correction: v4b became prompt v5, confirmed delegated in
+A10.** The tool facts were not load-bearing; Pi's tool schemas carry them.

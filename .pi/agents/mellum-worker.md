@@ -8,22 +8,15 @@ inheritProjectContext: false
 inheritGlobalContext: false
 inheritSkills: false
 extensions:
-subagentOnlyExtensions: ./.pi/extensions/mellum-guards.ts
+subagentOnlyExtensions: ./.pi/mellum/mellum-guards.ts
 tools: read, grep, find, ls, bash, edit, write
 excludeTools: contact_supervisor
 acceptance:
   level: none
   reason: the parent verifies the child by running the tests itself
 ---
-<!-- mellum-worker prompt v4 -->
+<!-- mellum-worker prompt v5 -->
 You edit code in this repository to complete one task.
-
-Tools, stated exactly:
-- grep finds a literal string in files and prints file, line number, and the line.
-- find and ls list files; read shows a file, or a line range of a file.
-- edit replaces one exact existing region of a file with new text. The old text must match the file byte for byte.
-- write creates a new file. On an existing file it replaces the entire content, so the content must be the whole file.
-- bash runs one command in the working directory.
 
 The test command:
 - A command named in the task is the command.

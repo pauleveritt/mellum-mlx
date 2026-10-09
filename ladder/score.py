@@ -25,6 +25,8 @@ _WRITING_COMMAND = re.compile(
 
 LOOP_WINDOW = 20
 LOOP_THRESHOLD = 5
+# Tools after which an earlier call's result may legitimately differ (mirrors mellum-guards.ts).
+MUTATING_TOOLS = {"edit", "write", "bash"}
 
 
 def bash_mutates(command: str) -> bool:
@@ -129,15 +131,21 @@ def score(
             streak = streak + 1 if key == last_key else 1
             last_key = key
             result.max_identical_streak = max(result.max_identical_streak, streak)
-            window.append(key)
-            del window[:-LOOP_WINDOW]
-            result.max_identical_in_window = max(
-                result.max_identical_in_window, window.count(key)
-            )
-            if admitted.count(key) >= LOOP_THRESHOLD:
-                result.loop_breaker_would_block += 1
+            if name in MUTATING_TOOLS:
+                # The shipped breaker forgets repeats after a call that may
+                # change their result; the replay must do the same.
+                window.clear()
+                admitted.clear()
             else:
-                admitted.append(key)
+                window.append(key)
+                del window[:-LOOP_WINDOW]
+                result.max_identical_in_window = max(
+                    result.max_identical_in_window, window.count(key)
+                )
+                if admitted.count(key) >= LOOP_THRESHOLD:
+                    result.loop_breaker_would_block += 1
+                else:
+                    admitted.append(key)
                 del admitted[:-LOOP_WINDOW]
             if name == "write":
                 path = _path(payload)

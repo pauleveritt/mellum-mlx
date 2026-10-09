@@ -69,7 +69,7 @@
     "max_identical_streak": 2,
     "write_shrink": 0,
     "nudges": 1,
-    "max_identical_in_window": 3,
+    "max_identical_in_window": 2,
     "loop_breaker_would_block": 0,
     "effective_params": {
       "temperature": 0,

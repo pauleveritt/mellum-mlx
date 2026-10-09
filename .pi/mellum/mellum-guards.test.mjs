@@ -67,3 +67,30 @@ test("adapter nudges from agent_before_settle when the last assistant turn was e
 	handlers.turn_end({ message: done, context: { canContinue: false }, outcome: "completed" });
 	assert.equal(handlers.agent_before_settle({ context: { canContinue: false }, outcome: "completed" }), undefined);
 });
+
+test("loop breaker forgets repeats once an edit, write, or bash call may have changed the result", () => {
+	const guard = createLoopBreaker(20, 5);
+	const read = { toolName: "read", input: { path: "x" } };
+	for (let i = 0; i < 5; i++) assert.equal(guard(read), undefined);
+	assert.equal(guard({ toolName: "edit", input: { path: "x", edits: [] } }), undefined);
+	assert.equal(guard(read), undefined, "a re-read after an edit is not a repeat");
+	for (let i = 0; i < 4; i++) assert.equal(guard(read), undefined);
+	assert.ok(guard(read).block, "five unbroken repeats after the edit still trip it");
+});
+
+test("an edit/test loop never trips the loop breaker", () => {
+	const guard = createLoopBreaker(20, 5);
+	for (let i = 0; i < 12; i++) {
+		assert.equal(guard({ toolName: "edit", input: { path: "a.py", edits: [{ oldText: String(i) }] } }), undefined);
+		assert.equal(guard({ toolName: "bash", input: { command: "uv run --offline pytest -q" } }), undefined);
+	}
+});
+
+test("empty-final nudge leaves aborted or errored turns alone", async () => {
+	const { createEmptyFinalNudge } = await import("./mellum-guards.ts");
+	const nudge = createEmptyFinalNudge(3);
+	const content = [{ type: "thinking", thinking: "..." }];
+	assert.equal(nudge({ role: "assistant", stopReason: "aborted", content }), undefined);
+	assert.equal(nudge({ role: "assistant", stopReason: "error", content }), undefined);
+	assert.ok(nudge({ role: "assistant", stopReason: "stop", content }).continue);
+});

@@ -44,12 +44,13 @@
     "max_identical_streak": 1,
     "write_shrink": 0,
     "nudges": 0,
-    "max_identical_in_window": 2,
+    "max_identical_in_window": 1,
     "loop_breaker_would_block": 0,
     "effective_params": {
       "temperature": 1,
       "top_p": 0.95,
       "top_k": 20,
+      "min_p": 0,
       "max_tokens": 16384,
       "presence_penalty": 0
     }

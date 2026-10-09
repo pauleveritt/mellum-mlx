@@ -38,10 +38,10 @@ def test_ladder_agent_file_appends_recorder_to_guards(tmp_path):
     prepare_pi_workspace(ws, Path("/abs/record-pi.js"))
     text = (ws / ".pi" / "agents" / "mellum-worker.md").read_text()
     assert (
-        "subagentOnlyExtensions: ./.pi/extensions/mellum-guards.ts, /abs/record-pi.js\n"
+        "subagentOnlyExtensions: ./.pi/mellum/mellum-guards.ts, /abs/record-pi.js\n"
         in text
     )
-    assert (ws / ".pi" / "extensions" / "mellum-guards.ts").exists()
+    assert (ws / ".pi" / "mellum" / "mellum-guards.ts").exists()
     committed = (ROOT / ".pi" / "agents" / "mellum-worker.md").read_text()
     assert "record-pi" not in committed
 

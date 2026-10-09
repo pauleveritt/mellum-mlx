@@ -1,5 +1,7 @@
 # Mellum worker recipe: design
 
+> **Historical design document (2026-10-08).** The shipped worker differs where the ladder said so: no `thinking:` line (inert on oMLX), no parent-side skill (read 2/15, no effect), prompt v5 (facts only, no procedure or tool descriptions), guards nudge cap 3 + loop breaker, extension at `.pi/mellum/`. See `docs/mellum-worker.md` and `docs/research/ladder/ablation-summary.md`.
+
 **Date:** 2026-10-08
 **Status:** approved design, awaiting implementation plan
 **Scope:** this repository (`mellum-mlx`), the local oMLX server, the operator's Pi and OpenCode installations

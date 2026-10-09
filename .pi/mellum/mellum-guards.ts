@@ -7,7 +7,7 @@
  * - newFileOnlyWrite: a model wrote the changed fragment as the whole file
  *   (942 lines -> 2) under a write-only envelope. The refusal states the fact
  *   the model lacked, at the moment it matters.
- * - createLoopBreaker: 245 identical `ls -R` calls, all successful; ported
+ * - createLoopBreaker (repeats are forgotten after an edit, write, or bash call): 245 identical `ls -R` calls, all successful; ported
  *   unchanged (window 20, threshold 5, keyed on tool + sorted arguments).
  * - createStepBudget: Pi has no turn cap; a budget that blocks with a reason
  *   to summarise beats an abort, which the parent reads as a failed run.
@@ -63,6 +63,9 @@ export interface Continuation {
 
 function isEmptyAssistantTurn(message: MessageLike): boolean {
 	if (message.role !== "assistant") return false;
+	// Only a turn the model ended itself is a lapse; an aborted or errored turn is not ours to continue.
+	const stop = (message as Record<string, unknown>).stopReason;
+	if (typeof stop === "string" && stop !== "stop") return false;
 	const blocks = Array.isArray(message.content) ? (message.content as Record<string, unknown>[]) : [];
 	const hasText = blocks.some((b) => b.type === "text" && typeof b.text === "string" && b.text.trim() !== "");
 	const hasCall = blocks.some((b) => b.type === "toolCall");
@@ -119,9 +122,19 @@ export const newFileOnlyWrite =
 		};
 	};
 
+/** Tools after which an earlier call's result may legitimately differ. */
+const MUTATING_TOOLS = new Set(["edit", "write", "bash"]);
+
 export function createLoopBreaker(window = 20, threshold = 5): Guard {
-	const recent: string[] = [];
+	let recent: string[] = [];
 	return (call) => {
+		if (MUTATING_TOOLS.has(call.toolName)) {
+			// An edit, write, or command may change what any repeated call returns:
+			// forget the repeats, so an edit/test loop or a re-read after an edit
+			// is never mistaken for a loop. Only unbroken repeats trip the breaker.
+			recent = [];
+			return undefined;
+		}
 		const key = callKey(call.toolName, call.input);
 		const seen = recent.filter((entry) => entry === key).length;
 		if (seen >= threshold) {
@@ -129,8 +142,8 @@ export function createLoopBreaker(window = 20, threshold = 5): Guard {
 				block: true,
 				reason:
 					`You have already run this exact ${call.toolName} call ${seen} times ` +
-					`in a row and the result will not change. Do not repeat it. ` +
-					`Use what you already know and take the next concrete action.`,
+					`with nothing changed in between, and the result will not change. ` +
+					`Do not repeat it. Use what you already know and take the next concrete action.`,
 			};
 		}
 		recent.push(key);

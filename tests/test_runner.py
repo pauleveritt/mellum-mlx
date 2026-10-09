@@ -237,3 +237,35 @@ def test_direct_args_default_to_append_mode_with_the_worker_prompt(tmp_path):
     args = build_pi_direct_args(tmp_path / "t", "fix it", False)
     assert args[args.index("--append-system-prompt") + 1] == str(PROMPT_FILE)
     assert "--system-prompt" not in args
+
+
+def test_run_record_leaves_direct_only_fields_empty_in_other_modes(
+    monkeypatch, tmp_path
+):
+    """prompt_file/prompt_mode/thinking only describe direct mode; recording them elsewhere misdescribes the run."""
+    import json
+    import subprocess as sp
+
+    from ladder import run_ladder
+    from ladder.rungs import CheckResult, Rung
+
+    monkeypatch.setattr(
+        run_ladder.subprocess,
+        "run",
+        lambda args, **kw: sp.CompletedProcess(args, 0, stdout="", stderr=""),
+    )
+    monkeypatch.setattr(run_ladder, "prepare_workspace", lambda rung, scratch: scratch)
+    monkeypatch.setattr(run_ladder, "baseline_index", lambda ws: (set(), {}))
+    monkeypatch.setattr(run_ladder, "prepare_pi_workspace", lambda ws, ext: ws)
+    monkeypatch.setattr(run_ladder, "mirror_agent_dir", lambda s, d, t: d)
+    rung = Rung(
+        1, "calculator", "fix it", ["true"], lambda ws, base: CheckResult(False, True)
+    )
+    run_ladder.run_once(rung, "delegated", "baseline", 1, tmp_path / "out", 5, {}, True)
+    record = json.loads(
+        (
+            tmp_path / "out" / "rung1-baseline-delegated-guards-r1" / "run.json"
+        ).read_text()
+    )
+    assert record["prompt_file"] is None and record["prompt_mode"] is None
+    assert record["thinking"] is None and record["prompt_version"] is None

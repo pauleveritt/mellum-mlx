@@ -42,7 +42,7 @@ every request from its `models.json` entry. So:
 | --- | --- | --- |
 | `max_tokens` | Pi `models.json` → `maxTokens` | 16,384 (model-card per-turn budget); a 4,096 cap cut off one three-file run mid-thought ([phases 1c/1d](research/ladder/phase1d-tuned-effective/README.md)) |
 | temperature / top_p / top_k | Pi `models.json` → `samplingParams`, else Pi defaults | Pi default is 1 / 0.95 / 20 (the model card's agentic sampling) |
-| presence / repetition penalty | request | 0 / 1.0 — a presence penalty of 0.5 changed nothing measurable (1c vs 1d: 13/15 vs 14/15, same request and error counts) |
+| presence / repetition penalty | request | 0 / 1.0 — 0.5 showed nothing measurable (1c vs 1d: 13/15 vs 14/15, same request and error counts), though that comparison changed the cap at the same time |
 | thinking budget | server profile only | off — a 4,096-per-block budget was never triggered in 15 runs; the request cap is what binds |
 | `max_tool_result_tokens` | server profile only | off — the largest tool result in 30 runs was 2,639 characters |
 | `forced_ct_kwargs: ["enable_thinking"]` | server profile only | on — a client cannot switch thinking off |
@@ -58,7 +58,7 @@ profiles with a snapshot and a verified restore.
 
 ## 3. Pi setup
 
-Project-local, nothing in `~/.pi/agent` changes:
+Project-local; the only change outside the project is the `models.json` entry at the end of this list:
 
 - `.pi/agents/mellum-worker.md` — the worker. Each frontmatter line removes
   something: `systemPromptMode: replace` (no Pi base prompt),
@@ -80,9 +80,13 @@ Project-local, nothing in `~/.pi/agent` changes:
   test command exits 0*, and *if it fails, read, change, run again*. Those two
   sentences took rung 5 from 0/3 to 3/3 ([phase 0b](research/ladder/phase0b-baseline-v3/README.md));
   the six-step procedure v3 carried was measured and removed ([ablation A2](research/ladder/ablation-a2-v4a/README.md)).
-- `.pi/extensions/mellum-guards.ts` — child-only guards, loaded through
-  `subagentOnlyExtensions`. On by default: the empty-final nudge (cap 3)
-  and the loop breaker. Dormant: new-file-only `write`, step budget. See §6.
+- `.pi/mellum/mellum-guards.ts` — the child's guards, loaded only through the
+  agent file's `subagentOnlyExtensions`. It lives outside `.pi/extensions/`
+  on purpose: Pi auto-loads that directory into every session in a trusted
+  project, parent included. On by default: the empty-final nudge (cap 3)
+  and the loop breaker (five unbroken repeats of one call, forgotten after
+  any edit, write, or bash call). Dormant: new-file-only `write`, step
+  budget. See §6.
 - No parent-side skill. One existed; it was read in 2 of 15 runs and the
   pass rate was 15/15 with or without it ([phase 3b](research/ladder/phase3b-delegated-skill/README.md)),
   so it was removed. Its content is §4's one paragraph on briefing.
@@ -106,13 +110,13 @@ Your parent scopes the task, writes the brief, launches the child, and — in
 every measured run — runs the tests itself before reporting. The child's
 one recorded pathology is a turn that ends with `stop` and no text;
 pi-subagents reports it as "Subagent produced no output". In sixty
-delegated runs the parent re-dispatched on that error and the second
-attempt passed nine times out of eleven; the two misses were reported as
-blocked, never as done ([A9](research/ladder/ablation-a9-delegated-final/README.md)).
+delegated runs the parent re-dispatched on that error and the run then
+passed ten times out of eleven; the one miss was reported as blocked, never
+as done ([A9](research/ladder/ablation-a9-delegated-final/README.md)).
 
 The ladder's five sentences, as a user would type them, and what happened:
 
-| rung | sentence | worker alone (direct, greedy; cap 4,096 / cap 16,384) | via your Pi (delegated) |
+| rung | sentence | worker alone, prompt v3 (direct, greedy; cap 4,096 / cap 16,384) | via your Pi (delegated, prompt v3) |
 | --- | --- | --- | --- |
 | 1 | the cart total ignores quantity, fix it | 3/3 / 3/3 | 3/3 |
 | 2 | add a balance() that sums the entries, with a test | 3/3 / 3/3 | 3/3 |
@@ -127,8 +131,11 @@ skill asks a question nobody answers, when a turn ends empty, and on the
 three-file change by symptom. Bare Pi with no extensions or skills
 ([phase 0c plain](research/ladder/phase0c-primary-plain/README.md)): 3/3, 3/3,
 2/3, 0/3, 0/3, with four empty finals, three false "fixed" claims, and one
-rewritten test file. The worker alone under the same model and harness is
-15/15 ([phase 2b](research/ladder/phase2b-guards-bounded/README.md)).
+rewritten test file. The worker alone, same model and harness but greedy
+decoding and the worker prompt, is 15/15
+([phase 2b](research/ladder/phase2b-guards-bounded/README.md), [A2](research/ladder/ablation-a2-v4a/README.md),
+[A3](research/ladder/ablation-a3-v4b/README.md)); only the delegated runs
+measure it at the sampling your Pi actually uses.
 
 Where it stops working: rung 5 is a three-file change described only by a
 symptom. Alone, the worker's failures there are honest ("tests still
@@ -140,7 +147,7 @@ output pasted, or "produced no output"; on the second, dispatch once more.
 
 ```bash
 uv run python -m ladder.run_ladder --mode direct   --guards --profile baseline --rung 1 --rung 2 --rung 3 --rung 4 --rung 5 --repeat 3 --out docs/research/ladder/<name>
-uv run python -m ladder.run_ladder --mode delegated --guards --rung 1 --rung 2 --rung 3 --rung 4 --rung 5 --repeat 3 --deadline 900 --out docs/research/ladder/<name>
+uv run python -m ladder.run_ladder --mode delegated --profile baseline --guards --rung 1 --rung 2 --rung 3 --rung 4 --rung 5 --repeat 3 --deadline 900 --out docs/research/ladder/<name>
 uv run python -m ladder.run_ladder --mode primary   --profile baseline --rung 1 --rung 2 --rung 3 --rung 4 --rung 5 --repeat 3 --deadline 600 --out docs/research/ladder/<name>           # your profile, Mellum as the model
 uv run python -m ladder.run_ladder --mode primary   --profile baseline --plain --rung 1 --rung 2 --rung 3 --rung 4 --rung 5 --repeat 3 --deadline 600 --out docs/research/ladder/<name>   # bare Pi: no extensions, skills, or context files
 MELLUM_GUARDS='{"emptyFinalNudge":3,"loopBreaker":true}' uv run python -m ladder.run_ladder --mode direct --guards --profile tuned ...   # override which guards run; recorded as guards_env
@@ -159,10 +166,15 @@ are recorded and untrusted. Three repeats are a gate, not an error rate.
 Settled by measurement:
 
 - The worker prompt's two completion facts were the lever (11/15 → 15/15).
-- Of the server-side settings, only the request cap has a measurable effect;
-  penalty, thinking budget and tool-result cap do not ([1c/1d](research/ladder/phase1d-tuned-effective/README.md)).
-- The write-clobber and loop pathologies did not occur in 135 direct runs;
-  the loop breaker, replayed exactly, would have touched one thrashing run.
+- Of the settings, only the request cap has a measurable effect (it is a
+  request value, sent by Pi); the penalty, thinking budget and tool-result
+  cap do not, with the caveat that 1c→1d changed the cap and the penalty
+  together ([1c/1d](research/ladder/phase1d-tuned-effective/README.md)).
+- No `write` shrank an existing file and no test file was edited in 240
+  direct runs except one (A4, reverted). The loop breaker as shipped
+  (repeats forgotten after any edit, write, or bash call), replayed over
+  all 330 runs, would have refused nothing; its earlier form refused one
+  legitimate re-read after an edit in two passing runs and was corrected.
 - A frontier parent scopes and verifies natively; the child never needs the
   user's sentence.
 
