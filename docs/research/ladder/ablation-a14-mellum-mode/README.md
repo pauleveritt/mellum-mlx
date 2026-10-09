@@ -79,7 +79,9 @@ exercised over Pi's RPC mode (`ladder/probe_mode_rpc.py`, 2026-10-09): on,
 a second on, a task, off, a parent turn, a second off, and the one-shot
 `/mellum <task>`; each request carried exactly the expected prompt,
 history and tools, and the model was restored. The compaction guard is
-unit-tested. Pi loads
+unit-tested. After `/mellum off` the parent now receives one handoff block
+per finished span instead of Mellum's tool calls (added 2026-10-09; the
+probe's parent request went from 18 messages to 3). Pi loads
 `-e` extensions before packages, so the filter runs *first* among payload
 hooks and later handlers could re-add content; none of the operator's
 packages hooks `before_provider_request` today. After `/mellum off` the parent's next request carries the

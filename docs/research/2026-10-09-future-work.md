@@ -9,7 +9,7 @@ unmeasured or measured once, with what it would cost to settle.
 | # | item | why | cost to measure | records |
 | --- | --- | --- | --- | --- |
 | 1 | Make the nudge fire inside pi-subagents children, or write "re-dispatch once on 'produced no output'" into the worker's advertised description | the child's one pathology; the parent recovers it 12/13 times unprompted today | a probe of pi-subagents' hook forwarding, then one delegated phase (15 runs, ~20 min) | A9, A11 |
-| 2 | Handoff collapse after `/mellum off`: replace the mode's tool results with one summary block for the parent's next request | the mode leaves the parent a large next request | ~60 lines (the `context` hook), no ladder phase | A14 |
+| 2 | ~~Handoff collapse after `/mellum off`~~ done 2026-10-09: the `context` hook sends the parent one block per finished span (task, files, last command output, final reply); the probe's parent request went from 18 messages to 3 | — | — | A14 |
 | 3 | `async: false` in the worker's frontmatter | prevents the one async-launch failure | one delegated phase | A8 |
 | 4 | The "no steps" brief shape (files, change, test command, done-when) as one prompt | A16 measured a brief with intermediate replies, which the model obeyed; the shape itself is untested | the brief files and one phase (15 runs) | A15/A16 |
 | 5 | Verification between chunk steps | the verify loop from the `pi-circuitbreaker` notes; chunking alone cost 2.4× | runner change plus one phase | A15 |

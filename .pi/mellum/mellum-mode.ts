@@ -10,13 +10,14 @@
  * becomes the worker prompt (prompts/mellum-worker.md, or $MELLUM_MODE_PROMPT), and the
  * messages are only those after the on-marker, minus Superpowers' bootstrap message.
  * Earlier turns' reasoning_content is left in place: removing it made runs 60% slower
- * (ladder A12). The session keeps everything, so the parent sees the mode's work after
- * /mellum off.
+ * (ladder A12). The session keeps everything; after /mellum off the parent is sent one
+ * handoff block per finished span (task, files touched, last command output, final reply)
+ * in place of Mellum's tool calls (the `context` hook).
  *
  * Headless: MELLUM_MODE=1 activates at session start (the ladder's "mode" runner).
  * Load alongside mellum-guards.ts; this file does not auto-load (it is not in .pi/extensions/).
  */
-import { readFileSync } from "node:fs";
+import { appendFileSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -86,6 +87,79 @@ export function filterForMellum(payload: any, systemPrompt: string, opts: { expe
 	}
 	if (markerMissing) out.mellumModeMarkerMissing = true;
 	return out;
+}
+
+/**
+ * What the parent sees of a finished Mellum span: one block instead of every
+ * read, edit and test run. Built from the span's own messages (Pi's internal
+ * message format, as seen by the `context` event). Open spans are untouched.
+ */
+export function collapseHandoffs(messages: Msg[]): Msg[] {
+	// At the `context` event a sent marker is a `custom` message; in the provider
+	// payload it has become a user message. Accept both.
+	const hasMark = (m: Msg, mark: string) => (m.role === "user" || m.role === "custom") && textOf(m).includes(mark);
+	const out: Msg[] = [];
+	let i = 0;
+	while (i < messages.length) {
+		const m = messages[i];
+		if (hasMark(m, MARK_ON)) {
+			let j = i + 1;
+			while (j < messages.length && !hasMark(messages[j], MARK_OFF)) j++;
+			if (j >= messages.length) {
+				out.push(...messages.slice(i));
+				break;
+			}
+			// The task is the user message just before the on-marker (Pi queues the
+			// marker after the prompt it was queued with), else the first after it.
+			const last = out[out.length - 1];
+			const prev = last && last.role === "user" && !hasMark(last, MARK_OFF) ? out.pop() : undefined;
+			let span = messages.slice(i + 1, j);
+			// The off-marker is queued "next turn", so it lands after the prompt the user
+			// typed next; trailing user messages after the span's last reply are that
+			// prompt, not part of the task.
+			let tail = span.length;
+			while (tail > 0 && span[tail - 1].role === "user") tail--;
+			const trailing = span.slice(tail);
+			span = span.slice(0, tail);
+			const task = prev ? textOf(prev) : textOf(span.find((x) => x.role === "user") ?? {});
+			out.push(handoffMessage(task, span), ...trailing);
+			i = j + 1;
+			continue;
+		}
+		out.push(m);
+		i++;
+	}
+	return out;
+}
+
+function handoffMessage(task: string, span: Msg[]): Msg {
+	const files = new Set<string>();
+	let lastTest = "";
+	let finalText = "";
+	for (const m of span) {
+		if (m.role === "assistant" && Array.isArray(m.content)) {
+			for (const b of m.content as any[]) {
+				if (b.type === "toolCall" && (b.name === "edit" || b.name === "write")) {
+					const p = b.arguments?.path;
+					if (typeof p === "string") files.add(p);
+				}
+				if (b.type === "text" && typeof b.text === "string" && b.text.trim()) finalText = b.text.trim();
+			}
+		}
+		if (m.role === "toolResult" && (m as any).toolName === "bash") {
+			const t = textOf(m).trim();
+			if (t) lastTest = t;
+		}
+	}
+	const clip = (s: string, n: number) => (s.length > n ? s.slice(0, n) + "\n…" : s);
+	const body = [
+		"[mellum-mode handoff] Mellum ran a task in this session; its tool calls are in the transcript but not repeated here.",
+		`Task: ${clip(task.trim(), 400)}`,
+		`Files edited or written: ${files.size ? [...files].join(", ") : "none"}`,
+		lastTest ? `Last command output:\n${clip(lastTest, 600)}` : "Last command output: none",
+		finalText ? `Mellum's final reply:\n${clip(finalText, 1500)}` : "Mellum's final reply: (empty)",
+	].join("\n");
+	return { role: "user", content: [{ type: "text", text: body }], timestamp: Date.now() };
 }
 
 function loadPrompt(): string {
@@ -187,6 +261,18 @@ export default function (pi: any) {
 		if (!active || event?.reason === "manual") return undefined;
 		ctx.ui?.notify?.("mellum-mode: auto-compaction skipped while the mode is on (/mellum off first, or /compact)", "warning");
 		return { cancel: true };
+	});
+
+	// Off: the parent gets one handoff block per finished span instead of Mellum's
+	// every read, edit and test run. The session itself keeps everything.
+	pi.on("context", (event: any) => {
+		if (process.env.MELLUM_MODE_DEBUG) {
+			const shapes = event.messages.map((m: any) => `${m.role}${m.customType ? ":" + m.customType : ""}${textOf(m).includes(MARK_ON) ? "[ON]" : ""}${textOf(m).includes(MARK_OFF) ? "[OFF]" : ""}`);
+			appendFileSync(process.env.MELLUM_MODE_DEBUG, JSON.stringify({ active, shapes }) + "\n");
+		}
+		if (active) return undefined;
+		const collapsed = collapseHandoffs(event.messages);
+		return collapsed === event.messages ? undefined : { messages: collapsed };
 	});
 
 	pi.on("before_provider_request", (event: any, ctx: any) => {

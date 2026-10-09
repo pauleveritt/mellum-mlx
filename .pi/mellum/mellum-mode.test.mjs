@@ -76,3 +76,69 @@ test("a missing marker while interactively active is reported, not silently wide
 	assert.equal(out.messages[1].content[0].text, "task");
 	assert.equal(out.mellumModeMarkerMissing, true);
 });
+
+test("after /mellum off, the parent sees one handoff block in place of the mode's turns", async () => {
+	const { collapseHandoffs, MARK_OFF } = await import("./mellum-mode.ts");
+	const msgs = [
+		text("user", "earlier parent turn"),
+		{ role: "assistant", content: [{ type: "text", text: "parent reply" }] },
+		text("user", "fix the cart total"),
+		text("user", MARK_ON),
+		{ role: "assistant", content: [{ type: "thinking", thinking: "..." }, { type: "toolCall", id: "1", name: "read", arguments: { path: "calculator.js" } }] },
+		{ role: "toolResult", toolCallId: "1", toolName: "read", content: [{ type: "text", text: "export function total() {}" }] },
+		{ role: "assistant", content: [{ type: "toolCall", id: "2", name: "edit", arguments: { path: "calculator.js", edits: [] } }] },
+		{ role: "toolResult", toolCallId: "2", toolName: "edit", content: [{ type: "text", text: "Successfully replaced 1 block(s)" }] },
+		{ role: "assistant", content: [{ type: "toolCall", id: "3", name: "bash", arguments: { command: "node --test calculator.test.js" } }] },
+		{ role: "toolResult", toolCallId: "3", toolName: "bash", content: [{ type: "text", text: "ℹ pass 3\nℹ fail 0" }] },
+		{ role: "assistant", content: [{ type: "text", text: "Files changed: calculator.js. Tests pass." }] },
+		text("user", MARK_OFF),
+		text("user", "thanks, now the docs"),
+	];
+	const out = collapseHandoffs(msgs);
+	assert.deepEqual(out.map(m => m.role), ["user", "assistant", "user", "user"]);
+	const handoff = out[2].content[0].text;
+	assert.match(handoff, /\[mellum-mode handoff\]/);
+	assert.match(handoff, /fix the cart total/);
+	assert.match(handoff, /calculator\.js/);
+	assert.match(handoff, /pass 3/);
+	assert.match(handoff, /Tests pass\./);
+	assert.ok(!handoff.includes("export function total"), "tool results are summarised, not replayed");
+	assert.equal(out[3].content[0].text, "thanks, now the docs");
+	assert.equal(msgs.length, 13, "input not mutated");
+});
+
+test("an open span (mode still on) is left alone by the collapse", async () => {
+	const { collapseHandoffs } = await import("./mellum-mode.ts");
+	const msgs = [text("user", "task"), text("user", MARK_ON), { role: "assistant", content: [{ type: "text", text: "working" }] }];
+	assert.deepEqual(collapseHandoffs(msgs), msgs);
+});
+
+test("a new prompt queued before the off-marker is kept after the handoff", async () => {
+	const { collapseHandoffs, MARK_OFF } = await import("./mellum-mode.ts");
+	const msgs = [
+		text("user", "fix it"),
+		text("user", MARK_ON),
+		{ role: "assistant", content: [{ type: "text", text: "done" }] },
+		text("user", "now the docs"),
+		text("user", MARK_OFF),
+	];
+	const out = collapseHandoffs(msgs);
+	assert.deepEqual(out.map(m => m.role), ["user", "user"]);
+	assert.match(out[0].content[0].text, /handoff/);
+	assert.equal(out[1].content[0].text, "now the docs");
+});
+
+test("markers arrive at the context event as custom messages, not user messages", async () => {
+	const { collapseHandoffs, MARK_OFF } = await import("./mellum-mode.ts");
+	const custom = (t) => ({ role: "custom", customType: "mellum-mode", content: [{ type: "text", text: t }] });
+	const msgs = [
+		text("user", "fix it"),
+		custom(MARK_ON),
+		{ role: "assistant", content: [{ type: "text", text: "done" }] },
+		text("user", "now the docs"),
+		custom(MARK_OFF),
+	];
+	const out = collapseHandoffs(msgs);
+	assert.deepEqual(out.map(m => m.role), ["user", "user"]);
+	assert.match(out[0].content[0].text, /handoff/);
+});

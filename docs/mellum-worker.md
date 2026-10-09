@@ -211,8 +211,11 @@ mode is on, the model is Mellum, the tools are the worker's seven, and
 every request is rewritten before it leaves: the system prompt is v5, the
 messages are only those since `/mellum on` (Superpowers' bootstrap and
 your earlier conversation are not sent), and pi-subagents' re-added tools
-are removed. Your session keeps everything, so after `/mellum off` your
-usual model sees what Mellum did.
+are removed. Your session keeps everything; after `/mellum off` your usual
+model is sent one handoff block per Mellum task (the task, the files
+edited or written, the last command output, Mellum's final reply) in
+place of Mellum's reads, edits and test runs, which stay in the transcript.
+In the probe this took the parent's next request from 18 messages to 3.
 
 Measured in the ladder ([A14](research/ladder/ablation-a14-mellum-mode/README.md)),
 same profile and sampling as "Mellum as the primary agent" above: 10/15
@@ -230,7 +233,7 @@ Where the cost goes, measured per task at the same sampling
 | wall, mean (by rung) | 54 s (30 / 38 / 24 / 77 / 99) | 70 s (24 / 76 / 31 / 99 / 122) |
 | Mellum requests per run | 11.1 | 13.1 |
 | your main model per run | 6.5 turns, about 3k output and 120k mostly cached input tokens | none |
-| left in your session | the parent's reads and the child's short report | all of Mellum's tool results |
+| left for your main model | the parent's reads and the child's short report | one handoff block per task (the transcript keeps the detail) |
 
 The Worker is not cheaper; its cost moves to your main model. The parent
 reads the files, runs the tests once, writes the brief, and runs the tests
@@ -238,9 +241,9 @@ again on the result. That scoping is why the child needs 11 requests
 where the Mode's model, starting from your sentence, needs 13 and thinks
 longer per turn, and why the Worker is slower on a one-line fix and
 faster on anything touching several files. Choose by what you are
-protecting: the hosted model's tokens (Mode spends none), wall time on
-multi-file tasks (Worker), or an uncluttered main conversation (Worker,
-because the parent summarises rather than inherits).
+protecting: the hosted model's tokens (Mode spends none), or wall time on
+multi-file tasks (Worker). Both leave the main conversation a short
+summary: the Worker's parent writes one, the Mode's handoff block is one.
 
 Cautions. The ladder measured the headless path; the interactive path
 (`on`, a second `on`, a task, `off`, a parent turn, a second `off`, the
@@ -249,9 +252,7 @@ over Pi's RPC mode, which showed each request carrying exactly the
 expected prompt, history and tools; the refusal to auto-compact while on
 is unit-tested. Pi loads `-e` extensions
 first, so the filter runs before any package's payload hook; none of
-Superpowers, pi-subagents or context7 rewrites the payload today. Mellum's
-tool results stay in your session, so a long task leaves your usual model
-a large next request. Auto-compaction is refused while the mode is on
+Superpowers, pi-subagents or context7 rewrites the payload today. Auto-compaction is refused while the mode is on
 (`/compact` still works); run `/mellum off` before a long parent turn.
 The `-e` paths are relative to the repository root.
 
