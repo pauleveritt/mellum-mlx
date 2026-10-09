@@ -17,6 +17,7 @@ unmeasured or measured once, with what it would cost to settle.
 | 7 | Serve Mellum with a reasoning parser on oMLX so `thinking_budget` is enforced; then measure the budget hook at medium | the only remaining lever on thinking cost; A13 showed the hook works and the server ignores it | server configuration, then one phase | A13 |
 | 8 | In-process child through Pi's SDK (`createAgentSession`) as a tool | removes pi-subagents' 521-char preamble and makes the nudge ours; only matters if the parent round trip stays | ~200 lines, one delegated phase | A9 |
 | 9 | OpenCode port of the worker (phase 4 of the original plan) | the global `mellum-worker` block in `~/.config/opencode/opencode.jsonc` is unmeasured | the ladder's `--harness opencode` and one phase | — |
+| 11 | Exercise `/mellum on|off` interactively: marker order, a prompt queued with `on`, `off` restore, the compaction refusal, and whether the nudge fires during an interactive turn | the ladder measured only the headless path (no marker); the interactive path is unit-tested only | a scripted TUI session or Pi's RPC mode, an hour | A14 |
 | 10 | Ladder tooling: remove server-profile switching (`ladder/omlx_profiles.py` PUT path) and the dormant guards; run-dir names that carry prompt/mode/thinking | measured inert (1c/1d) and never exercised | an afternoon, no phase | 1c/1d, A1 |
 
 Not scheduled, with reason: stripping prior-turn thinking (A12: 60% slower);
