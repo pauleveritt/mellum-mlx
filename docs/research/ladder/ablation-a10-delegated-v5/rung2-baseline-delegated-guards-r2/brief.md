@@ -1,0 +1,1 @@
+In this repository (cwd): add a function `balance(entries)` to ledger.py that returns the sum of `entry.amount` for the entries. Add a test named `test_balance` to test_ledger.py that checks balance([Entry("coffee", -3), Entry("pay", 10)]) == 7. Test command: uv run --offline pytest -q

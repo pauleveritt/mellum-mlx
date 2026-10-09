@@ -128,6 +128,9 @@ The ladder's five sentences, as a user would type them, and what happened:
 | 4 | make the failing test pass (three failing tests, three files) | 2/3 / 2/3 | 3/3 |
 | 5 | the export is missing the totals row (same, plus a decoy, no test named) | 2/3 / 3/3 | 3/3 |
 
+The worker as it ships, prompt v5, delegated: 3/3 on every rung, no
+re-dispatch, no empty child turn ([A10](research/ladder/ablation-a10-delegated-v5/README.md)).
+
 Mellum as the *primary* agent in your own profile, given the same sentences
 ([phase 0c](research/ladder/phase0c-primary-operator/README.md)): 3/3, 2/3,
 3/3, 2/3, 0/3. It reads and follows the Superpowers skills; it fails when a

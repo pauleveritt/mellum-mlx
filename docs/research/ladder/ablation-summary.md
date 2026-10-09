@@ -18,7 +18,7 @@ scorer column that was zero becomes non-zero.
 | A7 | the parent-side skill | — | yes | read 2/15, 15/15 either way (phase 3b) |
 | [A8](ablation-a8-delegated-lean/README.md) | (delegated check, before the `excludeTools` fix) | 14/15 | — | supervisor tool present; one async parent launch |
 | [A9](ablation-a9-delegated-final/README.md) | (delegated check, prompt v4) | 14/15 | — | the one failure is an empty child turn the parent reported honestly |
-| [A10](ablation-a10-delegated-v5/README.md) | (delegated check, prompt v5, as shipped) | pending | ships | |
+| [A10](ablation-a10-delegated-v5/README.md) | (delegated check, prompt v5, as shipped) | 15/15 | ships | no re-dispatch, no empty child turn |
 
 ## The worker, before and after
 
@@ -29,7 +29,7 @@ scorer column that was zero becomes non-zero.
 | guards on | nudge cap 1 (experimental), in `.pi/extensions/` (auto-loaded into the parent too) | nudge cap 3 + loop breaker (measured 15/15), in `.pi/mellum/`, child only |
 | parent-side skill | 45 lines, read 2/15 | none |
 | direct mode, 15 runs | 15/15 sampled; 13–14/15 greedy | 15/15 (A3 = v5); v4 15/15 twice (A2, A5) |
-| delegated, 15 runs | 15/15 | 14/15 (A9, v4); A10 (v5) pending |
+| delegated, 15 runs | 15/15 | 15/15 (A10, v5) |
 
 ## The review's correction
 
