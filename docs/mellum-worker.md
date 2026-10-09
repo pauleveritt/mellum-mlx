@@ -94,6 +94,13 @@ Project-local; the only change outside the project is the `models.json` entry at
 - No parent-side skill. One existed; it was read in 2 of 15 runs and the
   pass rate was 15/15 with or without it ([phase 3b](research/ladder/phase3b-delegated-skill/README.md)),
   so it was removed. Its content is §4's one paragraph on briefing.
+- Optional, global to your profile: `{"intercomBridge": {"mode": "off"}}`
+  in `~/.pi/agent/extensions/subagent/config.json` removes the 1,582-character
+  supervisor block pi-subagents puts in every child's prompt; the worker
+  passed 15/15 with it off and its prompt halved
+  ([A11](research/ladder/ablation-a11-delegated-nointercom/README.md)).
+  Every other subagent of yours loses `contact_supervisor` too, so only if
+  none of them needs it.
 - `~/.pi/agent/models.json` omlx entry: `contextWindow 56000`, `maxTokens
   16384`, `thinkingFormat: qwen-chat-template`.
 
@@ -151,8 +158,9 @@ passes. A parent that reads the worker's reply will see either the test
 output pasted, or "produced no output"; on the second, dispatch once more.
 
 What it costs. Wall seconds are from an uncontrolled clock; "prefill" is
-the characters the local server receives per run, which is the cost that
-scales there. Fifteen runs each; full tables in
+the characters the local server receives per run. On oMLX most of it is
+cache hits (86% of the worker's input tokens in direct mode), so prompt
+length is a token cost more than a wall-clock one. Fifteen runs each; full tables in
 [ablation-summary.md](research/ladder/ablation-summary.md).
 
 | setup | pass | wall s | Mellum requests per run (max) | prefill, k chars per run |
@@ -176,7 +184,8 @@ alone costs about what bare Pi costs and passes; delegation adds 10–15 s of
 parent work on the small rungs and gives it back on the three-file ones,
 where the briefed child needs fewer requests (14 vs 20) and never more than
 16. Request counts are 11–14 per run everywhere; what differs is what each
-request carries.
+request carries. The options for cutting this further, measured and
+projected, are in [2026-10-09-worker-cost-options.md](research/2026-10-09-worker-cost-options.md).
 
 ## 5. Measuring
 

@@ -19,6 +19,7 @@ scorer column that was zero becomes non-zero.
 | [A8](ablation-a8-delegated-lean/README.md) | (delegated check, before the `excludeTools` fix) | 14/15 | — | supervisor tool present; one async parent launch |
 | [A9](ablation-a9-delegated-final/README.md) | (delegated check, prompt v4) | 14/15 | — | the one failure is an empty child turn the parent reported honestly |
 | [A10](ablation-a10-delegated-v5/README.md) | (delegated check, prompt v5, as shipped) | 15/15 | ships | no re-dispatch, no empty child turn |
+| [A11](ablation-a11-delegated-nointercom/README.md) | pi-subagents' intercom block (operator config, optional) | 15/15 | optional | child prompt 2,711 → 1,220 chars, prefill −20%, wall unchanged |
 
 ## The worker, before and after
 
@@ -107,6 +108,7 @@ runs, which removed the only evidence against A3.
    'produced no output'" in the worker's advertised description, which the
    parent reads unconditionally.
 2. pi-subagents appends its "Intercom orchestration channel" block to the
-   child prompt even with the tool excluded; ~2,000 characters the worker
-   does not use.
+   child prompt even with the tool excluded; `intercomBridge.mode: off`
+   removes it (A11) but is global to the operator's profile. The 521-char
+   child preamble has no switch.
 3. One parent launched the child asynchronously and ended its turn (A8).
