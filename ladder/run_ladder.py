@@ -29,6 +29,7 @@ from .score import score
 ROOT = Path(__file__).resolve().parent.parent
 PROMPT_FILE = ROOT / "prompts" / "mellum-worker.md"
 RECORD_EXT = ROOT / "ladder" / "record-pi.js"
+STRIP_EXT = ROOT / "ladder" / "strip-thinking.js"
 GUARDS_EXT = ROOT / ".pi" / "mellum" / "mellum-guards.ts"
 MODEL = "omlx/Mellum2.1-12B-A2.5B-Thinking-6bit"
 MODEL_ID = MODEL.split("/", 1)[1]
@@ -58,6 +59,7 @@ def build_pi_direct_args(
     prompt: Path = PROMPT_FILE,
     prompt_mode: str = "append",
     thinking: str = "high",
+    strip_thinking: bool = False,
 ) -> list[str]:
     """The worker alone. `append` keeps Pi's base prompt under the worker prompt (phases 0-2);
     `replace` sends the worker prompt only, which is what the shipped agent file does."""
@@ -84,6 +86,7 @@ def build_pi_direct_args(
         "--tools",
         TOOLS,
         *prompt_args,
+        *(["-e", str(STRIP_EXT)] if strip_thinking else []),
         "-e",
         str(RECORD_EXT),
     ]
@@ -275,6 +278,7 @@ def run_once(
     prompt_mode: str = "append",
     thinking: str = "high",
     subagents_config: dict | None = None,
+    strip_thinking: bool = False,
 ) -> dict:
     scratch = Path(tempfile.mkdtemp(prefix="ladder-"))
     ws = prepare_workspace(rung, scratch)
@@ -300,7 +304,7 @@ def run_once(
         agent_dir = direct_agent_dir(scratch / "pi-agent", prof)
         env = child_env(dict(os.environ), str(trace), agent_dir, offline=True)
         args = build_pi_direct_args(
-            trace, rung.sentence, guards, prompt, prompt_mode, thinking
+            trace, rung.sentence, guards, prompt, prompt_mode, thinking, strip_thinking
         )
     started = time.time()
     deadline_hit = False
@@ -340,6 +344,7 @@ def run_once(
         "plain": plain,
         "guards": guards,
         "subagents_config": subagents_config,
+        "strip_thinking": strip_thinking if mode == "direct" else None,
         "guards_env": json.loads(os.environ["MELLUM_GUARDS"])
         if os.environ.get("MELLUM_GUARDS")
         else None,
@@ -461,6 +466,11 @@ def main(argv: list[str] | None = None) -> None:
         default=None,
         help="delegated mode: JSON that replaces pi-subagents' config.json in the mirrored agent dir",
     )
+    parser.add_argument(
+        "--strip-thinking",
+        action="store_true",
+        help="direct mode: drop earlier turns' reasoning_content from each request",
+    )
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--omlx", default="http://127.0.0.1:8001")
     args = parser.parse_args(argv)
@@ -502,6 +512,7 @@ def main(argv: list[str] | None = None) -> None:
                     args.prompt_mode,
                     args.thinking,
                     args.subagents_config,
+                    args.strip_thinking,
                 )
                 row = table_row(record)
                 with table.open("a") as stream:

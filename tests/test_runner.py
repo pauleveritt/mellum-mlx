@@ -269,3 +269,13 @@ def test_run_record_leaves_direct_only_fields_empty_in_other_modes(
     )
     assert record["prompt_file"] is None and record["prompt_mode"] is None
     assert record["thinking"] is None and record["prompt_version"] is None
+
+
+def test_direct_args_load_the_thinking_stripper_before_the_recorder(tmp_path):
+    """The recorder must see the stripped payload, so the stripper loads first."""
+    from ladder.run_ladder import RECORD_EXT, STRIP_EXT, build_pi_direct_args
+
+    args = build_pi_direct_args(tmp_path / "t", "fix it", True, strip_thinking=True)
+    exts = [args[i + 1] for i, a in enumerate(args) if a == "-e"]
+    assert exts.index(str(STRIP_EXT)) < exts.index(str(RECORD_EXT))
+    assert str(STRIP_EXT) not in build_pi_direct_args(tmp_path / "t", "fix it", True)
