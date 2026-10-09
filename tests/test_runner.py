@@ -89,6 +89,32 @@ def test_run_once_never_inherits_stdin(monkeypatch, tmp_path):
     assert seen.get("stdin") is sp.DEVNULL
 
 
+def test_run_record_carries_the_guards_override(monkeypatch, tmp_path):
+    """A run under MELLUM_GUARDS must say so in run.json, or the record lies about which guards ran."""
+    import json
+    import subprocess as sp
+
+    from ladder import run_ladder
+    from ladder.rungs import CheckResult, Rung
+
+    monkeypatch.setattr(
+        run_ladder.subprocess,
+        "run",
+        lambda args, **kw: sp.CompletedProcess(args, 0, stdout="", stderr=""),
+    )
+    monkeypatch.setattr(run_ladder, "prepare_workspace", lambda rung, scratch: scratch)
+    monkeypatch.setattr(run_ladder, "baseline_index", lambda ws: (set(), {}))
+    monkeypatch.setenv("MELLUM_GUARDS", '{"emptyFinalNudge":3,"loopBreaker":true}')
+    rung = Rung(
+        1, "calculator", "fix it", ["true"], lambda ws, base: CheckResult(False, True)
+    )
+    run_ladder.run_once(rung, "direct", "baseline", 1, tmp_path / "out", 5, {}, True)
+    record = json.loads(
+        (tmp_path / "out" / "rung1-baseline-direct-guards-r1" / "run.json").read_text()
+    )
+    assert record["guards_env"] == {"emptyFinalNudge": 3, "loopBreaker": True}
+
+
 def test_signal_handlers_raise_system_exit_so_finally_blocks_run():
     import signal
 
@@ -160,7 +186,27 @@ def test_primary_args_run_mellum_as_the_parent_with_the_recorder():
     from ladder.run_ladder import MODEL, RECORD_EXT, build_pi_primary_args
 
     args = build_pi_primary_args("fix it")
-    assert args[:2] == ["pi", "-p"] and "--no-session" in args and "--no-extensions" not in args
+    assert (
+        args[:2] == ["pi", "-p"]
+        and "--no-session" in args
+        and "--no-extensions" not in args
+    )
+    assert args[args.index("--model") + 1] == MODEL
+    assert args[args.index("-e") + 1] == str(RECORD_EXT)
+    assert args[-1] == "fix it"
+
+
+def test_primary_plain_args_strip_extensions_skills_and_context_but_keep_the_recorder():
+    from ladder.run_ladder import MODEL, RECORD_EXT, build_pi_primary_args
+
+    args = build_pi_primary_args("fix it", plain=True)
+    for flag in (
+        "--no-extensions",
+        "--no-skills",
+        "--no-context-files",
+        "--no-session",
+    ):
+        assert flag in args
     assert args[args.index("--model") + 1] == MODEL
     assert args[args.index("-e") + 1] == str(RECORD_EXT)
     assert args[-1] == "fix it"

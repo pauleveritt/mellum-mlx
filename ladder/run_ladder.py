@@ -106,19 +106,27 @@ def build_pi_delegated_args(sentence: str) -> list[str]:
     ]
 
 
-def build_pi_primary_args(sentence: str) -> list[str]:
-    """Mellum as the primary agent in the operator's own profile, given the raw sentence.
+def build_pi_primary_args(sentence: str, plain: bool = False) -> list[str]:
+    """Mellum as the primary agent, given the raw sentence.
 
-    The baseline the worker is measured against: no worker in the workspace,
-    Superpowers and pi-subagents loaded as the operator has them, the recorder
-    loaded explicitly so the scorer sees the same events as direct mode.
+    Two baselines the worker is measured against. Operator (default): no
+    worker in the workspace, Superpowers and pi-subagents loaded as the
+    operator has them — what "just swap the model" does. Plain: Pi's own base
+    prompt and tools with no extensions, skills, or context files — the
+    model's ceiling as a primary agent, separating Superpowers' effect from
+    Pi's base prompt. Both load the recorder explicitly so the scorer sees the
+    same events as direct mode.
     """
+    plain_flags = (
+        ["--no-extensions", "--no-skills", "--no-context-files"] if plain else []
+    )
     return [
         "pi",
         "-p",
         "--mode",
         "json",
         "--no-session",
+        *plain_flags,
         "--thinking",
         "high",
         "--model",
@@ -241,6 +249,7 @@ def run_once(
     versions: dict,
     guards: bool,
     skill: bool = False,
+    plain: bool = False,
 ) -> dict:
     scratch = Path(tempfile.mkdtemp(prefix="ladder-"))
     ws = prepare_workspace(rung, scratch)
@@ -258,7 +267,7 @@ def run_once(
             Path.home() / ".pi" / "agent", scratch / "pi-agent", [ws]
         )
         env = child_env(dict(os.environ), str(trace), agent_dir, offline=False)
-        args = build_pi_primary_args(rung.sentence)
+        args = build_pi_primary_args(rung.sentence, plain)
     else:
         agent_dir = direct_agent_dir(scratch / "pi-agent", prof)
         env = child_env(dict(os.environ), str(trace), agent_dir, offline=True)
@@ -298,7 +307,11 @@ def run_once(
         "profile": prof,
         "mode": mode,
         "harness": "pi",
+        "plain": plain,
         "guards": guards,
+        "guards_env": json.loads(os.environ["MELLUM_GUARDS"])
+        if os.environ.get("MELLUM_GUARDS")
+        else None,
         "skill": skill,
         "prompt_version": PROMPT_VERSION,
         "versions": versions,
@@ -324,7 +337,7 @@ def run_once(
         ],
         "workspace": str(ws),
     }
-    variant = f"{'-guards' if guards else ''}{'-skill' if skill else ''}"
+    variant = f"{'-guards' if guards else ''}{'-skill' if skill else ''}{'-plain' if plain else ''}"
     run_dir = out / f"rung{rung.number}-{prof}-{mode}{variant}-r{repeat}"
     run_dir.mkdir(parents=True, exist_ok=True)
     (run_dir / "run.json").write_text(json.dumps(record, indent=2, default=str))
@@ -388,6 +401,11 @@ def main(argv: list[str] | None = None) -> None:
         action="store_true",
         help="delegated mode: give the parent the delegate-to-mellum skill",
     )
+    parser.add_argument(
+        "--plain",
+        action="store_true",
+        help="primary mode: no extensions, skills, or context files (Pi's base prompt only)",
+    )
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--omlx", default="http://127.0.0.1:8001")
     args = parser.parse_args(argv)
@@ -425,6 +443,7 @@ def main(argv: list[str] | None = None) -> None:
                     versions,
                     args.guards,
                     args.skill,
+                    args.plain,
                 )
                 row = table_row(record)
                 with table.open("a") as stream:
