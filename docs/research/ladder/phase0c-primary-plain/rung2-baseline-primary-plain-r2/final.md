@@ -1,0 +1,1 @@
+Added a `balance()` function to `ledger.py` that sums the amounts of entries, and included a test case in `test_ledger.py` to verify its behavior. Both changes have been committed and the tests pass successfully.

@@ -74,8 +74,8 @@ Project-local, nothing in `~/.pi/agent` changes:
   test command exits 0*, and *if it fails, read, change, run again*. Those two
   sentences took rung 5 from 0/3 to 3/3 ([phase 0b](research/ladder/phase0b-baseline-v3/README.md)).
 - `.pi/extensions/mellum-guards.ts` — child-only guards, loaded through
-  `subagentOnlyExtensions`. Dormant: new-file-only `write`, loop breaker,
-  step budget. Experimental: the empty-final nudge. See §6.
+  `subagentOnlyExtensions`. On by default: the empty-final nudge (cap 3)
+  and the loop breaker. Dormant: new-file-only `write`, step budget. See §6.
 - `.pi/skills/delegate-to-mellum/SKILL.md` — a parent-side skill. Available
   skills are read about one time in seven ([phase 3b](research/ladder/phase3b-delegated-skill/README.md));
   treat it as documentation until it is injected unconditionally (backlog 3c).
@@ -114,8 +114,11 @@ Mellum as the *primary* agent in your own profile, given the same sentences
 ([phase 0c](research/ladder/phase0c-primary-operator/README.md)): 3/3, 2/3,
 3/3, 2/3, 0/3. It reads and follows the Superpowers skills; it fails when a
 skill asks a question nobody answers, when a turn ends empty, and on the
-three-file change by symptom. Bare Pi with no extensions or skills: TODO
-phase 0c plain.
+three-file change by symptom. Bare Pi with no extensions or skills
+([phase 0c plain](research/ladder/phase0c-primary-plain/README.md)): 3/3, 3/3,
+2/3, 0/3, 0/3, with four empty finals, three false "fixed" claims, and one
+rewritten test file. The worker alone under the same model and harness is
+15/15 ([phase 2b](research/ladder/phase2b-guards-bounded/README.md)).
 
 Where it stops working: rung 5 is a three-file change described only by a
 symptom. Alone, the worker's failures there are honest ("tests still
@@ -154,10 +157,11 @@ Settled by measurement:
 
 Not settled:
 
-- The empty-final nudge: four of six lapses recovered, one run thrashed for
-  31 requests, and one run (1d rung 4) needed a second nudge the cap of one
-  refused. A cap of one is neither enough nor a bound; the bounded variant
-  (cap 3 plus loop breaker) is measured below (TODO phase 2b).
+- The empty-final nudge, capped at 3 with the loop breaker live: 15/15,
+  seven nudges in six runs, every nudged run green, no run needed a third
+  nudge, no loop-breaker refusal ([phase 2b](research/ladder/phase2b-guards-bounded/README.md)).
+  This is now the guard default. The empty turn itself is a model behaviour
+  the prompt does not change; it is handled, not fixed.
 - Mellum as the primary agent is viable through rung 4 (10/15 overall) and
   fails rung 5; the worker's gain is at the top of the ladder, not an escape
   from a broken primary mode.

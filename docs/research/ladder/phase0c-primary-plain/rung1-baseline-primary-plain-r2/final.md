@@ -1,0 +1,1 @@
+The cart total now correctly accounts for item quantities. The `totalCents` function in `calculator.js` has been updated to multiply price by quantity, and all tests pass.

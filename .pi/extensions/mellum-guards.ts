@@ -17,8 +17,10 @@
  *   one custom message restating the completion fact and asks for one more
  *   model request, at most `max` times per run.
  *
- * ENABLED is set from the phase 0-1 ladder tables: a guard is on only for a
- * column that was non-zero. Empty means every guard is dormant.
+ * ENABLED is set from the ladder records: the empty-final nudge capped at 3
+ * and the loop breaker live are phase 2b's 15/15 configuration
+ * (docs/research/ladder/phase2b-guards-bounded). The other guards stay
+ * dormant: their columns never went non-zero in direct mode.
  */
 
 import { existsSync } from "node:fs";
@@ -42,7 +44,7 @@ export const ENABLED: {
 	loopBreaker?: boolean;
 	stepBudget?: number;
 	emptyFinalNudge?: number;
-} = { emptyFinalNudge: 1 };
+} = { emptyFinalNudge: 3, loopBreaker: true };
 
 export const NUDGE_TEXT =
 	"[mellum-guard] Your last turn ended with no reply and no tool call. " +

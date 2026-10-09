@@ -1,0 +1,1 @@
+Renamed `fetch_rows` to `load_rows` in `rows.py` and updated all references in `report.py`. No other occurrences found.

@@ -1,0 +1,1 @@
+Added a `balance()` function that sums the entries, and included a test for it in `test_ledger.py`. Both tests now pass.

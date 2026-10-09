@@ -4,13 +4,14 @@
 Remove one part at a time, re-measure on the ladder, keep the removal only
 when the ladder holds.
 
-**Reference set:** chosen when phase 2b lands: direct mode, greedy, request
-cap 16,384, no penalty (`tuned-nopenalty`), prompt v3, the guard
-configuration 2b recommends. Everything below is measured against it with
-the same command shape:
+**Reference set:** phase 2b's configuration, 15/15: direct mode, greedy,
+`tuned` request parameters (cap 16,384, presence penalty 0.5 — kept so that
+only one thing changes per step; 1c/1d showed the penalty is inert), prompt
+v3, guards with the nudge capped at 3 and the loop breaker live. Every step
+is measured with the same command shape:
 
 ```bash
-uv run python -m ladder.run_ladder --mode direct --profile tuned-nopenalty --prompt-mode replace --rung 1 --rung 2 --rung 3 --rung 4 --rung 5 --repeat 3 --deadline 600 --out docs/research/ladder/ablation-<step>
+MELLUM_GUARDS='{"emptyFinalNudge":3,"loopBreaker":true}' uv run python -m ladder.run_ladder --mode direct --guards --profile tuned --prompt-mode replace --rung 1 --rung 2 --rung 3 --rung 4 --rung 5 --repeat 3 --deadline 600 --out docs/research/ladder/ablation-<step>
 ```
 
 **Regression rule:** a removal stands when the pass count is within one of

@@ -1,0 +1,59 @@
+diff --git a/export.py b/export.py
+index 5904d9e..9f69d6b 100644
+--- a/export.py
++++ b/export.py
+@@ -1,5 +1,10 @@
+ from render import render_rows
++from totals import column_totals
+ 
+ 
+-def export_csv(rows):
+-    return "\n".join(render_rows(rows))
++def export_csv(rows, totals=False):
++    if totals:
++        # Compute column totals
++        total_row = ["TOTAL"] + column_totals(rows)
++        rows = rows + [total_row]
++    return "\n".join(render_rows(rows))
+\ No newline at end of file
+diff --git a/render.py b/render.py
+index f17a074..e75349c 100644
+--- a/render.py
++++ b/render.py
+@@ -1,2 +1,6 @@
+-def render_rows(rows):
+-    return [",".join(str(v) for v in r) for r in rows]
++def render_rows(rows, mark_last=False):
++    rendered = [",".join(str(v) for v in r) for r in rows]
++    if mark_last and rows:
++        last_row_str = rendered[-1]
++        rendered[-1] = "TOTAL," + last_row_str
++    return rendered
+diff --git a/totals.py b/totals.py
+index 54cd29d..cfc90bc 100644
+--- a/totals.py
++++ b/totals.py
+@@ -1,4 +1,22 @@
+ def column_totals(rows):
+     if not rows:
+         return []
+-    return [sum(r[i] for r in rows) for i in range(len(rows[0]))]
++    result = []
++    for i in range(len(rows[0])):
++        total = 0
++        numeric_count = 0
++        for r in rows:
++            try:
++                val = float(r[i])
++                total += val
++                numeric_count += 1
++            except (ValueError, TypeError):
++                pass
++        if numeric_count > 0:
++            if total.is_integer():
++                result.append(int(total))
++            else:
++                result.append(total)
++        else:
++            result.append("")
++    return result
