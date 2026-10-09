@@ -1,0 +1,1 @@
+The test command exited with success (1 passed). So the task is complete. We should inform the user that rename fetch_rows to load_rows everywhere has been completed.

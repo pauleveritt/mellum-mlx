@@ -1,0 +1,1 @@
+Fixed the cart total calculation to account for quantity. Tests pass.
