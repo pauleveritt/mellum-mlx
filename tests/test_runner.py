@@ -257,7 +257,7 @@ def test_run_record_leaves_direct_only_fields_empty_in_other_modes(
     monkeypatch.setattr(run_ladder, "prepare_workspace", lambda rung, scratch: scratch)
     monkeypatch.setattr(run_ladder, "baseline_index", lambda ws: (set(), {}))
     monkeypatch.setattr(run_ladder, "prepare_pi_workspace", lambda ws, ext: ws)
-    monkeypatch.setattr(run_ladder, "mirror_agent_dir", lambda s, d, t: d)
+    monkeypatch.setattr(run_ladder, "mirror_agent_dir", lambda s, d, t, **kw: d)
     rung = Rung(
         1, "calculator", "fix it", ["true"], lambda ws, base: CheckResult(False, True)
     )

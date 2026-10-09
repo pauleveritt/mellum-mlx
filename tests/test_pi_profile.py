@@ -64,3 +64,31 @@ def test_direct_agent_dir_carries_the_profiles_request_params(tmp_path):
         settings["defaultProvider"] == "omlx"
         and settings["compaction"]["enabled"] is False
     )
+
+
+def test_mirror_agent_dir_can_override_the_pi_subagents_config(tmp_path):
+    """pi-subagents reads only ~/.pi/agent/extensions/subagent/config.json; the mirror gets its own copy
+    so a run can switch the intercom bridge off without touching the operator's file."""
+    import json
+
+    from ladder.pi_profile import mirror_agent_dir
+
+    src = tmp_path / "src"
+    (src / "extensions" / "subagent").mkdir(parents=True)
+    (src / "extensions" / "subagent" / "config.json").write_text(
+        '{"intercomBridge": {"mode": "always"}}'
+    )
+    dest = mirror_agent_dir(
+        src,
+        tmp_path / "dest",
+        [tmp_path / "ws"],
+        subagents_config={"intercomBridge": {"mode": "off"}},
+    )
+    written = json.loads((dest / "extensions" / "subagent" / "config.json").read_text())
+    assert written == {"intercomBridge": {"mode": "off"}}
+    assert (
+        json.loads((src / "extensions" / "subagent" / "config.json").read_text())[
+            "intercomBridge"
+        ]["mode"]
+        == "always"
+    )

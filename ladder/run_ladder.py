@@ -274,6 +274,7 @@ def run_once(
     prompt: Path = PROMPT_FILE,
     prompt_mode: str = "append",
     thinking: str = "high",
+    subagents_config: dict | None = None,
 ) -> dict:
     scratch = Path(tempfile.mkdtemp(prefix="ladder-"))
     ws = prepare_workspace(rung, scratch)
@@ -282,7 +283,10 @@ def run_once(
     if mode == "delegated":
         prepare_pi_workspace(ws, RECORD_EXT)
         agent_dir = mirror_agent_dir(
-            Path.home() / ".pi" / "agent", scratch / "pi-agent", [ws]
+            Path.home() / ".pi" / "agent",
+            scratch / "pi-agent",
+            [ws],
+            subagents_config=subagents_config,
         )
         env = child_env(dict(os.environ), str(trace), agent_dir)
         args = build_pi_delegated_args(rung.sentence)
@@ -335,6 +339,7 @@ def run_once(
         "harness": "pi",
         "plain": plain,
         "guards": guards,
+        "subagents_config": subagents_config,
         "guards_env": json.loads(os.environ["MELLUM_GUARDS"])
         if os.environ.get("MELLUM_GUARDS")
         else None,
@@ -490,6 +495,7 @@ def main(argv: list[str] | None = None) -> None:
                     args.prompt,
                     args.prompt_mode,
                     args.thinking,
+                    args.subagents_config,
                 )
                 row = table_row(record)
                 with table.open("a") as stream:

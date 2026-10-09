@@ -22,14 +22,28 @@ COPIED_FILES = ("settings.json", "models.json", "auth.json", "AGENTS.md")
 LINKED_DIRS = ("git", "npm")
 
 
-def mirror_agent_dir(source: Path, dest: Path, trusted: list[Path]) -> Path:
-    """Copy the parent's configuration, link its packages, trust the given workspaces."""
+def mirror_agent_dir(
+    source: Path,
+    dest: Path,
+    trusted: list[Path],
+    subagents_config: dict | None = None,
+) -> Path:
+    """Copy the parent's configuration, link its packages, trust the given workspaces.
+
+    `subagents_config` replaces pi-subagents' config.json in the mirror only
+    (it reads just ~/.pi/agent/extensions/subagent/config.json), so a run can
+    change e.g. the intercom bridge without touching the operator's file.
+    """
     dest.mkdir(parents=True, exist_ok=True)
     for name in COPIED_FILES:
         if (source / name).exists():
             shutil.copy2(source / name, dest / name)
     if (source / "extensions").is_dir():
         shutil.copytree(source / "extensions", dest / "extensions", dirs_exist_ok=True)
+    if subagents_config is not None:
+        target = dest / "extensions" / "subagent" / "config.json"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(json.dumps(subagents_config, indent=2))
     for name in LINKED_DIRS:
         if (source / name).exists():
             os.symlink(source / name, dest / name, target_is_directory=True)
