@@ -110,8 +110,12 @@ The ladder's five sentences, as a user would type them, and what happened:
 | 4 | make the failing test pass (three failing tests, three files) | 2/3 / 2/3 | 3/3 |
 | 5 | the export is missing the totals row (same, plus a decoy, no test named) | 2/3 / 3/3 | 3/3 |
 
-Mellum as the *primary* agent in the same profile, given the same sentences:
-TODO phase 0c — this is the baseline the recipe is measured against.
+Mellum as the *primary* agent in your own profile, given the same sentences
+([phase 0c](research/ladder/phase0c-primary-operator/README.md)): 3/3, 2/3,
+3/3, 2/3, 0/3. It reads and follows the Superpowers skills; it fails when a
+skill asks a question nobody answers, when a turn ends empty, and on the
+three-file change by symptom. Bare Pi with no extensions or skills: TODO
+phase 0c plain.
 
 Where it stops working: rung 5 is a three-file change described only by a
 symptom. Alone, the worker's failures there are honest ("tests still
@@ -154,8 +158,9 @@ Not settled:
   31 requests, and one run (1d rung 4) needed a second nudge the cap of one
   refused. A cap of one is neither enough nor a bound; the bounded variant
   (cap 3 plus loop breaker) is measured below (TODO phase 2b).
-- Whether "Mellum as the primary agent" was ever viable on these tasks:
-  TODO phase 0c.
+- Mellum as the primary agent is viable through rung 4 (10/15 overall) and
+  fails rung 5; the worker's gain is at the top of the ladder, not an escape
+  from a broken primary mode.
 
 Follow-ups and the research record: [docs/research/](research/), the
 [spec](superpowers/specs/2026-10-08-mellum-worker-recipe-design.md), and the
