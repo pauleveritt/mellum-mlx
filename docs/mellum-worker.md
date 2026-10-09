@@ -1,6 +1,6 @@
 # Mellum 2.1 as a worker agent under Pi
 
-**Status: draft written overnight 2026-10-08/09; result tables marked TODO are filled from the ladder records as they land.**
+**Status: measured recipe, 2026-10-09. Every number links to its record under `docs/research/ladder/`; the lean-down that produced the shipped worker is summarised in [ablation-summary.md](research/ladder/ablation-summary.md).**
 
 This is the practical recipe that came out of the research in
 [docs/research/](research/): run the local Mellum 2.1 model not as the agent
@@ -103,9 +103,12 @@ itself; it edits in place.
 
 In a normal Pi session, name the worker: "Use mellum-worker to do this: …".
 Your parent scopes the task, writes the brief, launches the child, and — in
-every measured run — runs the tests itself before reporting. Check the
-child's final text, not just the parent's summary: the child's one recorded
-pathology is a turn that ends with `stop` and no text.
+every measured run — runs the tests itself before reporting. The child's
+one recorded pathology is a turn that ends with `stop` and no text;
+pi-subagents reports it as "Subagent produced no output". In sixty
+delegated runs the parent re-dispatched on that error and the second
+attempt passed nine times out of eleven; the two misses were reported as
+blocked, never as done ([A9](research/ladder/ablation-a9-delegated-final/README.md)).
 
 The ladder's five sentences, as a user would type them, and what happened:
 
@@ -130,7 +133,8 @@ rewritten test file. The worker alone under the same model and harness is
 Where it stops working: rung 5 is a three-file change described only by a
 symptom. Alone, the worker's failures there are honest ("tests still
 failing") or silent (empty final). With a parent that scopes first, it
-passes.
+passes. A parent that reads the worker's reply will see either the test
+output pasted, or "produced no output"; on the second, dispatch once more.
 
 ## 5. Measuring
 
@@ -164,11 +168,16 @@ Settled by measurement:
 
 Not settled:
 
-- The empty-final nudge, capped at 3 with the loop breaker live: 15/15,
-  seven nudges in six runs, every nudged run green, no run needed a third
-  nudge, no loop-breaker refusal ([phase 2b](research/ladder/phase2b-guards-bounded/README.md)).
-  This is now the guard default. The empty turn itself is a model behaviour
-  the prompt does not change; it is handled, not fixed.
+- The empty-final nudge, capped at 3 with the loop breaker live, in direct
+  mode: 15/15, seven nudges in six runs, every nudged run green
+  ([phase 2b](research/ladder/phase2b-guards-bounded/README.md)); without
+  the extension, 13/15 ([A1](research/ladder/ablation-a1-noguards/README.md)).
+- **The nudge does not fire inside a pi-subagents child.** Zero nudges in
+  sixty delegated runs while eleven children "produced no output"; the
+  parent's re-dispatch is what recovers them. First backlog item.
+- pi-subagents appends an "Intercom orchestration channel" block (about
+  2,000 characters) to the child prompt even with `contact_supervisor`
+  excluded; the worker ignores it.
 - Mellum as the primary agent is viable through rung 4 (10/15 overall) and
   fails rung 5; the worker's gain is at the top of the ladder, not an escape
   from a broken primary mode.
