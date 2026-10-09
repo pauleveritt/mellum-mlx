@@ -33,3 +33,19 @@ test("without an on-marker (headless activation) only the bootstrap is dropped",
 	assert.deepEqual(out.messages.map(m => m.role), ["system", "user"]);
 	assert.equal(out.messages[1].content[0].text, "task");
 });
+
+test("a prompt queued just before the on-marker is kept, and marker messages never reach the model", () => {
+	const payload = {
+		messages: [
+			{ role: "system", content: "base" },
+			text("user", "fix the cart total"),
+			text("user", MARK_ON),
+		],
+		tools: [{ type: "function", function: { name: "read" } }, { type: "function", function: { name: "subagent" } }],
+	};
+	const out = filterForMellum(payload, "v5");
+	assert.deepEqual(out.messages.map(m => m.role), ["system", "user"]);
+	assert.equal(out.messages[1].content[0].text, "fix the cart total");
+	assert.ok(!JSON.stringify(out.messages).includes(MARK_ON));
+	assert.deepEqual(out.tools.map(t => t.function.name), ["read"], "pi-subagents' re-added tools are filtered out");
+});

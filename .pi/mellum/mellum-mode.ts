@@ -36,15 +36,30 @@ function textOf(m: Msg): string {
 export function filterForMellum(payload: any, systemPrompt: string) {
 	if (!payload || !Array.isArray(payload.messages)) return payload;
 	const msgs: Msg[] = payload.messages;
+	const isMarker = (m: Msg) => m.role === "user" && (textOf(m).includes(MARK_ON) || textOf(m).includes(MARK_OFF));
 	let start = 0;
 	for (let i = msgs.length - 1; i >= 0; i--) {
 		if (msgs[i].role === "user" && textOf(msgs[i]).includes(MARK_ON)) {
 			start = i + 1;
+			// A prompt submitted in the same turn as /mellum on is queued before the
+			// marker; keep it rather than starting from an empty context.
+			const prev = msgs[i - 1];
+			if (prev && prev.role === "user" && !isMarker(prev) && !textOf(prev).includes(BOOTSTRAP_MARKER)) {
+				const next = msgs[i + 1];
+				if (!next || next.role !== "user") start = i - 1;
+			}
 			break;
 		}
 	}
-	const kept = msgs.slice(start).filter((m) => !(m.role === "system") && !textOf(m).includes(BOOTSTRAP_MARKER));
-	return { ...payload, messages: [{ role: "system", content: systemPrompt }, ...kept] };
+	const kept = msgs
+		.slice(start)
+		.filter((m) => m.role !== "system" && !isMarker(m) && !textOf(m).includes(BOOTSTRAP_MARKER));
+	const out: any = { ...payload, messages: [{ role: "system", content: systemPrompt }, ...kept] };
+	if (Array.isArray(payload.tools)) {
+		// pi-subagents re-adds its own tools after setActiveTools; the worker gets only its seven.
+		out.tools = payload.tools.filter((t: any) => WORKER_TOOLS.includes(t?.function?.name ?? t?.name));
+	}
+	return out;
 }
 
 function loadPrompt(): string {
@@ -71,7 +86,7 @@ export default function (pi: any) {
 		await pi.setModel(model);
 		pi.setActiveTools(WORKER_TOOLS);
 		active = true;
-		pi.sendMessage({ customType: "mellum-mode", content: MARK_ON, display: true }, { deliverAs: "nextTurn" });
+		if (notify) pi.sendMessage({ customType: "mellum-mode", content: MARK_ON, display: true }, { deliverAs: "nextTurn" });
 		if (notify) ctx.ui?.notify?.(`mellum-mode on: ${provider}/${id}, tools ${WORKER_TOOLS.join(",")}`, "info");
 	}
 
