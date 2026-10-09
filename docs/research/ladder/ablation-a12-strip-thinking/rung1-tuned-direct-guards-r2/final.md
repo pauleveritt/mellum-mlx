@@ -1,0 +1,1 @@
+The cart total issue has been fixed. The `totalCents` function now correctly multiplies each item's price by its quantity before summing. Tests pass successfully.

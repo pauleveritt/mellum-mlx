@@ -1,0 +1,48 @@
+diff --git a/export.py b/export.py
+index 5904d9e..e1215b0 100644
+--- a/export.py
++++ b/export.py
+@@ -1,5 +1,10 @@
+ from render import render_rows
++from totals import column_totals
+ 
+ 
+-def export_csv(rows):
+-    return "\n".join(render_rows(rows))
++def export_csv(rows, totals=False):
++    csv_rows = render_rows(rows)
++    if totals:
++        total_row = ["TOTAL"] + [str(val) for val in column_totals(rows)]
++        csv_rows.append(",".join(total_row))
++    return "\n".join(csv_rows)
+diff --git a/render.py b/render.py
+index f17a074..a212272 100644
+--- a/render.py
++++ b/render.py
+@@ -1,2 +1,6 @@
+-def render_rows(rows):
+-    return [",".join(str(v) for v in r) for r in rows]
++def render_rows(rows, mark_last=False):
++    rendered = [",".join(str(v) for v in r) for r in rows]
++    if mark_last and rows:
++        last_row = rendered[-1]
++        rendered[-1] = "TOTAL," + last_row
++    return rendered
+diff --git a/totals.py b/totals.py
+index 54cd29d..4c2a2ef 100644
+--- a/totals.py
++++ b/totals.py
+@@ -1,4 +1,12 @@
+ def column_totals(rows):
+     if not rows:
+         return []
+-    return [sum(r[i] for r in rows) for i in range(len(rows[0]))]
++    num_cols = len(rows[0])
++    totals = []
++    for i in range(num_cols):
++        col_values = [row[i] for row in rows]
++        if all(isinstance(val, (int, float)) for val in col_values):
++            totals.append(sum(col_values))
++        else:
++            totals.append("")
++    return totals

@@ -1,0 +1,1 @@
+The cart total now correctly accounts for quantity by multiplying each item's priceCents by its quantity before summing. All tests pass.

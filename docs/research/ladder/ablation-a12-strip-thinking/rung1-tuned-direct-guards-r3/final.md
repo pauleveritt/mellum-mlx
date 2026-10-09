@@ -1,0 +1,1 @@
+The cart total now correctly multiplies prices by quantity. Tests pass.

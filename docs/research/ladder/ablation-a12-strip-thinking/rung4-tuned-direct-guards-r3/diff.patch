@@ -1,0 +1,19 @@
+diff --git a/totals.py b/totals.py
+index 54cd29d..8565b45 100644
+--- a/totals.py
++++ b/totals.py
+@@ -1,4 +1,13 @@
+ def column_totals(rows):
+     if not rows:
+         return []
+-    return [sum(r[i] for r in rows) for i in range(len(rows[0]))]
++    num_cols = len(rows[0])
++    totals = []
++    for i in range(num_cols):
++        col_values = [r[i] for r in rows]
++        # Check if all values are numbers (int or float)
++        if all(isinstance(v, (int, float)) for v in col_values):
++            totals.append(sum(col_values))
++        else:
++            totals.append("")
++    return totals

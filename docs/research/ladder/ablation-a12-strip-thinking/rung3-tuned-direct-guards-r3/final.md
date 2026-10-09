@@ -1,0 +1,1 @@
+All occurrences of `fetch_rows` have been renamed to `load_rows`, and the tests pass.

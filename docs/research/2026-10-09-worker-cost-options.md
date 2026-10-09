@@ -29,6 +29,13 @@ boilerplate. Prefill is mostly cached, so prompt length is a token cost,
 not a wall-clock one. Wall time is dominated by the model's own generation
 on rungs 4–5 (77–108 s in every setup that passes them).
 
+**Measured after this document was first written (A12):** stripping
+earlier turns' `reasoning_content` from each request halves prefill and
+makes the run 60% slower, because the model regenerates what it no longer
+sees (output tokens +73%, empty turns ×3). Context is the cheap side on a
+cached local server; generation is the expensive side. Every option below
+that filters context must leave prior thinking in place.
+
 ## 2. Minor modifications to the current recipe
 
 | change | measured? | effect | cost to adopt |

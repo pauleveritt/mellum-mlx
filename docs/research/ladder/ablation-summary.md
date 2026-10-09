@@ -20,6 +20,7 @@ scorer column that was zero becomes non-zero.
 | [A9](ablation-a9-delegated-final/README.md) | (delegated check, prompt v4) | 14/15 | — | the one failure is an empty child turn the parent reported honestly |
 | [A10](ablation-a10-delegated-v5/README.md) | (delegated check, prompt v5, as shipped) | 15/15 | ships | no re-dispatch, no empty child turn |
 | [A11](ablation-a11-delegated-nointercom/README.md) | pi-subagents' intercom block (operator config, optional) | 15/15 | optional | child prompt 2,711 → 1,220 chars, prefill −20%, wall unchanged |
+| [A12](ablation-a12-strip-thinking/README.md) | earlier turns' thinking from each request | 14/15 | **no** | prefill −57% but output tokens +73%, wall 54 → 87 s: the replayed thinking is working memory |
 
 ## The worker, before and after
 
