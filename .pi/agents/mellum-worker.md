@@ -11,9 +11,6 @@ inheritSkills: false
 extensions:
 subagentOnlyExtensions: ./.pi/extensions/mellum-guards.ts
 tools: read, grep, find, ls, bash, edit, write
-excludeTools: contact_supervisor
-allowedAgents:
-defaultContext: fresh
 acceptance:
   level: none
   reason: the parent verifies the child by running the tests itself
