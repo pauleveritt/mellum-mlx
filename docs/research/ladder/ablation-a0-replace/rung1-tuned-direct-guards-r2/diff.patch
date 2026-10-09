@@ -1,0 +1,9 @@
+diff --git a/calculator.js b/calculator.js
+index e8aa88e..b05b2e8 100644
+--- a/calculator.js
++++ b/calculator.js
+@@ -1,3 +1,3 @@
+ export function totalCents(items) {
+-  return items.reduce((sum, item) => sum + item.priceCents, 0);
++  return items.reduce((sum, item) => sum + item.priceCents * (item.quantity || 0), 0);
+ }
