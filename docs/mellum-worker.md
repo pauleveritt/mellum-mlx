@@ -150,6 +150,34 @@ failing") or silent (empty final). With a parent that scopes first, it
 passes. A parent that reads the worker's reply will see either the test
 output pasted, or "produced no output"; on the second, dispatch once more.
 
+What it costs. Wall seconds are from an uncontrolled clock; "prefill" is
+the characters the local server receives per run, which is the cost that
+scales there. Fifteen runs each; full tables in
+[ablation-summary.md](research/ladder/ablation-summary.md).
+
+| setup | pass | wall s | Mellum requests per run (max) | prefill, k chars per run |
+| --- | --- | --- | --- | --- |
+| bare Pi, Mellum as the agent | 8/15 | 51 | 13.1 (30) | 297 |
+| your profile, Mellum as the agent | 10/15 | 72 | 13.7 (26) | 1,055 |
+| worker alone (direct, v5) | 15/15 | 54 | 14.3 (27) | 308 |
+| worker via your Pi (delegated, v5) | 15/15 | 54 | 11.1 (16) | 221 |
+
+| wall s per rung | 1 | 2 | 3 | 4 | 5 |
+| --- | --- | --- | --- | --- | --- |
+| bare Pi | 14 | 39 | 22 | 53 | 128 |
+| your profile | 55 | 81 | 54 | 84 | 85 |
+| worker alone | 18 | 36 | 21 | 87 | 108 |
+| delegated | 30 | 38 | 24 | 77 | 99 |
+
+Read it as: running Mellum in your full profile is the slow way (three to
+four times bare Pi on the easy rungs, five times the prefill, from the 17k
+character system prompt and skill files on every request); the worker
+alone costs about what bare Pi costs and passes; delegation adds 10–15 s of
+parent work on the small rungs and gives it back on the three-file ones,
+where the briefed child needs fewer requests (14 vs 20) and never more than
+16. Request counts are 11–14 per run everywhere; what differs is what each
+request carries.
+
 ## 5. Measuring
 
 ```bash
