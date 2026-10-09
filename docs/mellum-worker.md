@@ -40,11 +40,11 @@ every request from its `models.json` entry. So:
 
 | setting | where it is decided | value used |
 | --- | --- | --- |
-| `max_tokens` | Pi `models.json` → `maxTokens` | 16,384 (model-card per-turn budget) |
+| `max_tokens` | Pi `models.json` → `maxTokens` | 16,384 (model-card per-turn budget); a 4,096 cap cut off one three-file run mid-thought ([phases 1c/1d](research/ladder/phase1d-tuned-effective/README.md)) |
 | temperature / top_p / top_k | Pi `models.json` → `samplingParams`, else Pi defaults | Pi default is 1 / 0.95 / 20 (the model card's agentic sampling) |
-| presence / repetition penalty | request | 0 / 1.0 — no measured benefit from a penalty (TODO: phase 1d) |
-| thinking budget | server profile only | TODO after phase 1d |
-| `max_tool_result_tokens` | server profile only | 4,000 is harmless; no measured benefit |
+| presence / repetition penalty | request | 0 / 1.0 — a presence penalty of 0.5 changed nothing measurable (1c vs 1d: 13/15 vs 14/15, same request and error counts) |
+| thinking budget | server profile only | off — a 4,096-per-block budget was never triggered in 15 runs; the request cap is what binds |
+| `max_tool_result_tokens` | server profile only | off — the largest tool result in 30 runs was 2,639 characters |
 | `forced_ct_kwargs: ["enable_thinking"]` | server profile only | on — a client cannot switch thinking off |
 
 Verify with one request through the proxy or Pi's `before_provider_request`
@@ -102,13 +102,13 @@ pathology is a turn that ends with `stop` and no text.
 
 The ladder's five sentences, as a user would type them, and what happened:
 
-| rung | sentence | worker alone (direct, greedy) | via your Pi (delegated) |
+| rung | sentence | worker alone (direct, greedy; cap 4,096 / cap 16,384) | via your Pi (delegated) |
 | --- | --- | --- | --- |
-| 1 | the cart total ignores quantity, fix it | TODO 1c | 3/3 |
-| 2 | add a balance() that sums the entries, with a test | TODO 1c | 3/3 |
-| 3 | rename fetch_rows to load_rows everywhere | TODO 1c | 3/3 |
-| 4 | make the failing test pass (three failing tests, three files) | TODO 1c | 3/3 |
-| 5 | the export is missing the totals row (same, plus a decoy, no test named) | TODO 1c | 3/3 |
+| 1 | the cart total ignores quantity, fix it | 3/3 / 3/3 | 3/3 |
+| 2 | add a balance() that sums the entries, with a test | 3/3 / 3/3 | 3/3 |
+| 3 | rename fetch_rows to load_rows everywhere | 3/3 / 3/3 | 3/3 |
+| 4 | make the failing test pass (three failing tests, three files) | 2/3 / 2/3 | 3/3 |
+| 5 | the export is missing the totals row (same, plus a decoy, no test named) | 2/3 / 3/3 | 3/3 |
 
 Mellum as the *primary* agent in the same profile, given the same sentences:
 TODO phase 0c — this is the baseline the recipe is measured against.
@@ -123,7 +123,9 @@ passes.
 ```bash
 uv run python -m ladder.run_ladder --mode direct   --guards --profile baseline --rung 1 --rung 2 --rung 3 --rung 4 --rung 5 --repeat 3 --out docs/research/ladder/<name>
 uv run python -m ladder.run_ladder --mode delegated --guards --rung 1 --rung 2 --rung 3 --rung 4 --rung 5 --repeat 3 --deadline 900 --out docs/research/ladder/<name>
-uv run python -m ladder.run_ladder --mode primary   --rung 1 --rung 2 --rung 3 --rung 4 --rung 5 --repeat 3 --deadline 600 --out docs/research/ladder/<name>
+uv run python -m ladder.run_ladder --mode primary   --profile baseline --rung 1 --rung 2 --rung 3 --rung 4 --rung 5 --repeat 3 --deadline 600 --out docs/research/ladder/<name>           # your profile, Mellum as the model
+uv run python -m ladder.run_ladder --mode primary   --profile baseline --plain --rung 1 --rung 2 --rung 3 --rung 4 --rung 5 --repeat 3 --deadline 600 --out docs/research/ladder/<name>   # bare Pi: no extensions, skills, or context files
+MELLUM_GUARDS='{"emptyFinalNudge":3,"loopBreaker":true}' uv run python -m ladder.run_ladder --mode direct --guards --profile tuned ...   # override which guards run; recorded as guards_env
 uv run python -m ladder.summarize docs/research/ladder/<a> docs/research/ladder/<b>
 ```
 
@@ -139,16 +141,19 @@ are recorded and untrusted. Three repeats are a gate, not an error rate.
 Settled by measurement:
 
 - The worker prompt's two completion facts were the lever (11/15 → 15/15).
-- The write-clobber and loop pathologies did not occur in 105 direct runs;
+- Of the server-side settings, only the request cap has a measurable effect;
+  penalty, thinking budget and tool-result cap do not ([1c/1d](research/ladder/phase1d-tuned-effective/README.md)).
+- The write-clobber and loop pathologies did not occur in 135 direct runs;
   the loop breaker, replayed exactly, would have touched one thrashing run.
 - A frontier parent scopes and verifies natively; the child never needs the
   user's sentence.
 
 Not settled:
 
-- Server-side tuning (thinking budget, tool-result cap): TODO phase 1d.
-- The empty-final nudge: it recovered one of three empty finals and let
-  another run thrash for 31 requests; a cap of one does not bound it.
+- The empty-final nudge: four of six lapses recovered, one run thrashed for
+  31 requests, and one run (1d rung 4) needed a second nudge the cap of one
+  refused. A cap of one is neither enough nor a bound; the bounded variant
+  (cap 3 plus loop breaker) is measured below (TODO phase 2b).
 - Whether "Mellum as the primary agent" was ever viable on these tasks:
   TODO phase 0c.
 
