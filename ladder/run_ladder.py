@@ -455,6 +455,12 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument(
         "--thinking", default="high", help="direct mode: Pi thinking level"
     )
+    parser.add_argument(
+        "--subagents-config",
+        type=json.loads,
+        default=None,
+        help="delegated mode: JSON that replaces pi-subagents' config.json in the mirrored agent dir",
+    )
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--omlx", default="http://127.0.0.1:8001")
     args = parser.parse_args(argv)
