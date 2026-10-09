@@ -18,8 +18,14 @@ from .score import score
 
 
 def baseline_from_workspace(ws: Path) -> dict[str, int]:
-    out = subprocess.run(["git", "ls-files"], cwd=ws, capture_output=True, text=True).stdout
-    return {p: len((ws / p).read_text(errors="replace").splitlines()) for p in out.split() if p}
+    out = subprocess.run(
+        ["git", "ls-files"], cwd=ws, capture_output=True, text=True, check=False
+    ).stdout
+    return {
+        p: len((ws / p).read_text(errors="replace").splitlines())
+        for p in out.split()
+        if p
+    }
 
 
 def rescore_dir(directory: Path) -> int:
@@ -36,9 +42,13 @@ def rescore_dir(directory: Path) -> int:
             record["baseline_lines"] = lines
         stdout = run_json.with_name("stdout.txt")
         if "thinking_reentries" not in record and stdout.exists():
-            record["thinking_reentries"] = parse_pi_json(stdout.read_text(), with_reentries=True)[2]
+            record["thinking_reentries"] = parse_pi_json(
+                stdout.read_text(), with_reentries=True
+            )[2]
             changed += 1
-        new = score(read_events(run_json.with_name("trace.jsonl")), set(lines), lines).as_row()
+        new = score(
+            read_events(run_json.with_name("trace.jsonl")), set(lines), lines
+        ).as_row()
         if new != record.get("score"):
             record["score"] = new
             changed += 1
@@ -46,7 +56,9 @@ def rescore_dir(directory: Path) -> int:
         if "check" in record and "stop_reason" in record:
             rows.append((record["rung"], record["repeat"], table_row(record)))
     if rows:
-        Path(directory, "table.md").write_text(HEADER + "".join(r for _, _, r in sorted(rows)))
+        Path(directory, "table.md").write_text(
+            HEADER + "".join(r for _, _, r in sorted(rows))
+        )
     return changed
 
 

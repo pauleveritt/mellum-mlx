@@ -21,7 +21,9 @@ def make_sandbox(rung: int, parent: Path | None = None) -> Path:
     scratch = Path(tempfile.mkdtemp(prefix=f"mellum-try-rung{rung}-", dir=parent))
     ws = prepare_workspace(RUNGS[rung], scratch)
     # pi-subagents finds project agents from the nearest .pi/, so carry ours along.
-    shutil.copytree(ROOT / ".pi", ws / ".pi", ignore=shutil.ignore_patterns("*.test.mjs"))
+    shutil.copytree(
+        ROOT / ".pi", ws / ".pi", ignore=shutil.ignore_patterns("*.test.mjs")
+    )
     return ws
 
 

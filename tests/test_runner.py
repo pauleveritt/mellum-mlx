@@ -7,7 +7,13 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def test_direct_args_are_the_clean_profile():
     args = build_pi_direct_args(Path("/tmp/trace.jsonl"), "fix it")
-    for flag in ("-p", "--no-extensions", "--no-skills", "--no-context-files", "--no-session"):
+    for flag in (
+        "-p",
+        "--no-extensions",
+        "--no-skills",
+        "--no-context-files",
+        "--no-session",
+    ):
         assert flag in args
     assert args[args.index("--tools") + 1] == "read,grep,find,ls,bash,edit,write"
     assert args[args.index("--append-system-prompt") + 1] == str(PROMPT_FILE)
@@ -30,7 +36,9 @@ def test_parse_pi_json_extracts_final_stop_and_text():
     ]
     stop, text = parse_pi_json("\n".join(lines))
     assert stop == "length" and text == ""
-    stop, text = parse_pi_json('{"type":"message_end","message":{"role":"assistant","stopReason":"stop","content":[{"type":"text","text":"Done."}]}}')
+    stop, text = parse_pi_json(
+        '{"type":"message_end","message":{"role":"assistant","stopReason":"stop","content":[{"type":"text","text":"Done."}]}}'
+    )
     assert stop == "stop" and text == "Done."
 
 
@@ -44,11 +52,17 @@ def test_direct_env_drops_virtual_env():
 def test_parse_pi_json_counts_thinking_reentries():
     from ladder.run_ladder import parse_pi_json
 
-    two_blocks = ('{"type":"message_end","message":{"role":"assistant","stopReason":"toolUse","content":'
-                  '[{"type":"thinking","thinking":"a"},{"type":"text","text":"b"},{"type":"thinking","thinking":"c"}]}}')
-    one_block = ('{"type":"message_end","message":{"role":"assistant","stopReason":"stop","content":'
-                 '[{"type":"thinking","thinking":"a"},{"type":"text","text":"Done."}]}}')
-    stop, text, reentries = parse_pi_json("\n".join([two_blocks, one_block]), with_reentries=True)
+    two_blocks = (
+        '{"type":"message_end","message":{"role":"assistant","stopReason":"toolUse","content":'
+        '[{"type":"thinking","thinking":"a"},{"type":"text","text":"b"},{"type":"thinking","thinking":"c"}]}}'
+    )
+    one_block = (
+        '{"type":"message_end","message":{"role":"assistant","stopReason":"stop","content":'
+        '[{"type":"thinking","thinking":"a"},{"type":"text","text":"Done."}]}}'
+    )
+    stop, text, reentries = parse_pi_json(
+        f"{two_blocks}\n{one_block}", with_reentries=True
+    )
     assert stop == "stop" and text == "Done." and reentries == 1
 
 
@@ -68,7 +82,9 @@ def test_run_once_never_inherits_stdin(monkeypatch, tmp_path):
     monkeypatch.setattr(run_ladder.subprocess, "run", fake_run)
     monkeypatch.setattr(run_ladder, "prepare_workspace", lambda rung, scratch: scratch)
     monkeypatch.setattr(run_ladder, "baseline_index", lambda ws: (set(), {}))
-    rung = Rung(1, "calculator", "fix it", ["true"], lambda ws, base: CheckResult(False, True))
+    rung = Rung(
+        1, "calculator", "fix it", ["true"], lambda ws, base: CheckResult(False, True)
+    )
     run_ladder.run_once(rung, "direct", "baseline", 1, tmp_path / "out", 5, {}, False)
     assert seen.get("stdin") is sp.DEVNULL
 
@@ -82,5 +98,6 @@ def test_signal_handlers_raise_system_exit_so_finally_blocks_run():
     for sig in (signal.SIGTERM, signal.SIGHUP):
         handler = signal.getsignal(sig)
         import pytest
+
         with pytest.raises(SystemExit):
             handler(sig, None)

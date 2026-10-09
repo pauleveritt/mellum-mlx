@@ -6,7 +6,9 @@ from ladder.rungs import FIXTURES, RUNGS, copy_fixture
 
 
 def run_tests(rung, cwd):
-    return subprocess.run(rung.test_cmd, cwd=cwd, capture_output=True, text=True).returncode
+    return subprocess.run(
+        rung.test_cmd, cwd=cwd, capture_output=True, text=True, check=False
+    ).returncode
 
 
 def copy(rung, tmp_path):

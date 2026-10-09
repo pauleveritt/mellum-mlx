@@ -56,10 +56,11 @@
     "edit_anchor_failures": 12,
     "noop_edits": 1,
     "write_existing": 6,
-    "bash_file_mutations": 2,
+    "bash_file_mutations": 3,
     "max_identical_streak": 2,
     "write_shrink": 0,
-    "nudges": 2
+    "nudges": 2,
+    "max_identical_in_window": 6
   },
   "diff_stat": " export.py | 8 ++++++--\n 1 file changed, 6 insertions(+), 2 deletions(-)\n",
   "files_created": [],

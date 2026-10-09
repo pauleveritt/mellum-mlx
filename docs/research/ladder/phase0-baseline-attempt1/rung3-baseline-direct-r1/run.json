@@ -44,7 +44,9 @@
     "write_existing": 0,
     "bash_file_mutations": 0,
     "max_identical_streak": 1,
-    "write_shrink": 0
+    "write_shrink": 0,
+    "nudges": 0,
+    "max_identical_in_window": 3
   },
   "diff_stat": " report.py | 4 ++--\n rows.py   | 2 +-\n 2 files changed, 3 insertions(+), 3 deletions(-)\n",
   "files_created": [],

@@ -11,7 +11,9 @@ from pathlib import Path
 FIXTURES = Path(__file__).resolve().parent.parent / "fixtures"
 PYTEST = ["uv", "run", "--offline", "pytest", "-q"]
 COMMAND_TIMEOUT = 300
-IGNORED = shutil.ignore_patterns(".venv", "__pycache__", ".pytest_cache", "node_modules")
+IGNORED = shutil.ignore_patterns(
+    ".venv", "__pycache__", ".pytest_cache", "node_modules"
+)
 
 
 def copy_fixture(fixture: str, dest: Path) -> Path:
@@ -47,7 +49,14 @@ def _same(ws: Path, base: Path, name: str) -> bool:
 def _run(cmd: list[str], ws: Path) -> subprocess.CompletedProcess | None:
     """Run a check command; a hang past COMMAND_TIMEOUT is reported as no result."""
     try:
-        return subprocess.run(cmd, cwd=ws, capture_output=True, text=True, timeout=COMMAND_TIMEOUT)
+        return subprocess.run(
+            cmd,
+            cwd=ws,
+            capture_output=True,
+            text=True,
+            timeout=COMMAND_TIMEOUT,
+            check=False,
+        )
     except subprocess.TimeoutExpired:
         return None
 
@@ -91,7 +100,9 @@ def check_rename(ws: Path, base: Path) -> CheckResult:
 
 def check_feature(ws: Path, base: Path) -> CheckResult:
     unchanged = _same(ws, base, "test_export.py")
-    changed = sum(not _same(ws, base, n) for n in ("export.py", "totals.py", "render.py"))
+    changed = sum(
+        not _same(ws, base, n) for n in ("export.py", "totals.py", "render.py")
+    )
     passed = _tests_pass(PYTEST, ws) and unchanged and changed >= 2
     return CheckResult(passed, unchanged, {"source_files_changed": changed})
 
@@ -118,7 +129,9 @@ RUNGS: dict[int, Rung] = {
         PYTEST,
         check_ledger,
     ),
-    3: Rung(3, "rename", "rename fetch_rows to load_rows everywhere", PYTEST, check_rename),
+    3: Rung(
+        3, "rename", "rename fetch_rows to load_rows everywhere", PYTEST, check_rename
+    ),
     4: Rung(4, "feature", "make the failing test pass", PYTEST, check_feature),
     5: Rung(5, "edge", "the export is missing the totals row", PYTEST, check_edge),
 }

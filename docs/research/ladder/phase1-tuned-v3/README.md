@@ -54,8 +54,12 @@ anything, because there was nothing left to rescue after prompt v3.
 
 What each setting did or did not do:
 
-- **Thinking budget.** Never triggered a re-entry; no run died inside
-  thinking on either profile (every stop reason is `stop`). On the baseline
+- **Thinking budget.** No run died inside thinking on either profile (every
+  stop reason is `stop`). The `thinking_reentries` column stayed 0, but that
+  column has no positive control: it counts assistant messages with more than
+  one thinking block in Pi's stream, and whether oMLX's reasoning parser
+  would surface a server-side `<think>` re-entry as a second block is
+  unverified. Treat 0 as "not observed", not "did not happen". On the baseline
   profile the 4,096 output cap was also never hit in 15 runs. On these tasks
   the budget is insurance, not a fix.
 - **16,384 output.** Unused headroom on these rungs.

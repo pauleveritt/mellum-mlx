@@ -42,9 +42,26 @@ HEADER = (
 
 def build_pi_direct_args(trace: Path, sentence: str, guards: bool = False) -> list[str]:
     args = [
-        "pi", "-p", "--mode", "json", "--no-extensions", "--no-skills", "--no-prompt-templates", "--no-themes",
-        "--no-context-files", "--no-session", "--thinking", "high", "--model", MODEL,
-        "--tools", TOOLS, "--append-system-prompt", str(PROMPT_FILE), "-e", str(RECORD_EXT),
+        "pi",
+        "-p",
+        "--mode",
+        "json",
+        "--no-extensions",
+        "--no-skills",
+        "--no-prompt-templates",
+        "--no-themes",
+        "--no-context-files",
+        "--no-session",
+        "--thinking",
+        "high",
+        "--model",
+        MODEL,
+        "--tools",
+        TOOLS,
+        "--append-system-prompt",
+        str(PROMPT_FILE),
+        "-e",
+        str(RECORD_EXT),
     ]
     if guards:
         args += ["-e", str(GUARDS_EXT)]
@@ -87,16 +104,33 @@ def parse_pi_json(stdout: str, with_reentries: bool = False):
 
 
 def git(ws: Path, *args: str) -> str:
-    return subprocess.run(["git", *args], cwd=ws, capture_output=True, text=True).stdout
+    return subprocess.run(
+        ["git", *args], cwd=ws, capture_output=True, text=True, check=False
+    ).stdout
 
 
 def prepare_workspace(rung: Rung, scratch: Path) -> Path:
     ws = copy_fixture(rung.fixture, scratch / f"rung{rung.number}")
     git(ws, "init", "-q")
     git(ws, "add", "-A")
-    git(ws, "-c", "user.name=ladder", "-c", "user.email=ladder@localhost", "commit", "-qm", "baseline")
+    git(
+        ws,
+        "-c",
+        "user.name=ladder",
+        "-c",
+        "user.email=ladder@localhost",
+        "commit",
+        "-qm",
+        "baseline",
+    )
     if (ws / "pyproject.toml").exists():
-        subprocess.run(["uv", "sync", "--offline"], cwd=ws, capture_output=True, timeout=300)
+        subprocess.run(
+            ["uv", "sync", "--offline"],
+            cwd=ws,
+            capture_output=True,
+            timeout=300,
+            check=False,
+        )
     return ws
 
 
@@ -112,8 +146,16 @@ def read_events(trace: Path) -> list[dict]:
     return [json.loads(line) for line in trace.read_text().splitlines() if line.strip()]
 
 
-def run_once(rung: Rung, mode: str, prof: str, repeat: int, out: Path, deadline: int,
-             versions: dict, guards: bool) -> dict:
+def run_once(
+    rung: Rung,
+    mode: str,
+    prof: str,
+    repeat: int,
+    out: Path,
+    deadline: int,
+    versions: dict,
+    guards: bool,
+) -> dict:
     scratch = Path(tempfile.mkdtemp(prefix="ladder-"))
     ws = prepare_workspace(rung, scratch)
     paths, lines = baseline_index(ws)
@@ -124,14 +166,29 @@ def run_once(rung: Rung, mode: str, prof: str, repeat: int, out: Path, deadline:
     deadline_hit = False
     stdout = ""
     try:
-        proc = subprocess.run(args, cwd=ws, env=env, stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=deadline)
+        proc = subprocess.run(
+            args,
+            cwd=ws,
+            env=env,
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            text=True,
+            timeout=deadline,
+            check=False,
+        )
         stdout = proc.stdout + ("\n[stderr]\n" + proc.stderr if proc.stderr else "")
     except subprocess.TimeoutExpired as error:
         deadline_hit = True
         captured = error.stdout or b""
-        stdout = captured.decode(errors="replace") if isinstance(captured, bytes) else str(captured)
+        stdout = (
+            captured.decode(errors="replace")
+            if isinstance(captured, bytes)
+            else str(captured)
+        )
     wall = time.time() - started
-    stop_reason, final_text, thinking_reentries = parse_pi_json(stdout, with_reentries=True)
+    stop_reason, final_text, thinking_reentries = parse_pi_json(
+        stdout, with_reentries=True
+    )
     events = read_events(trace)
     git(ws, "add", "-A")
     record = {
@@ -154,10 +211,18 @@ def run_once(rung: Rung, mode: str, prof: str, repeat: int, out: Path, deadline:
         "check": asdict(rung.check(ws, FIXTURES / rung.fixture)),
         "score": score(events, paths, lines).as_row(),
         "diff_stat": git(ws, "diff", "--cached", "--stat"),
-        "files_created": [p for p in git(ws, "diff", "--cached", "--name-only", "--diff-filter=A").split() if p],
+        "files_created": [
+            p
+            for p in git(
+                ws, "diff", "--cached", "--name-only", "--diff-filter=A"
+            ).split()
+            if p
+        ],
         "workspace": str(ws),
     }
-    run_dir = out / f"rung{rung.number}-{prof}-{mode}{'-guards' if guards else ''}-r{repeat}"
+    run_dir = (
+        out / f"rung{rung.number}-{prof}-{mode}{'-guards' if guards else ''}-r{repeat}"
+    )
     run_dir.mkdir(parents=True, exist_ok=True)
     (run_dir / "run.json").write_text(json.dumps(record, indent=2, default=str))
     if trace.exists():
@@ -192,8 +257,10 @@ def install_signal_handlers() -> None:
 
 def tool_version(cmd: list[str]) -> str:
     try:
-        return subprocess.run(cmd, capture_output=True, text=True, timeout=30).stdout.strip()
-    except (OSError, subprocess.TimeoutExpired):
+        return subprocess.run(
+            cmd, capture_output=True, text=True, timeout=30, check=False
+        ).stdout.strip()
+    except OSError, subprocess.TimeoutExpired:
         return "unknown"
 
 
@@ -212,7 +279,10 @@ def main(argv: list[str] | None = None) -> None:
     install_signal_handlers()
 
     client = AdminClient(args.omlx)
-    versions = {"pi": tool_version(["pi", "--version"]), "omlx": tool_version(["omlx", "--version"])}
+    versions = {
+        "pi": tool_version(["pi", "--version"]),
+        "omlx": tool_version(["omlx", "--version"]),
+    }
     args.out.mkdir(parents=True, exist_ok=True)
     table = args.out / "table.md"
     if not table.exists():
@@ -220,11 +290,26 @@ def main(argv: list[str] | None = None) -> None:
     settings_path = Path.home() / ".omlx" / "model_settings.json"
     with profile(client, MODEL_ID, args.profile, settings_path) as live:
         versions["model_settings"] = {
-            k: live.get(k) for k in ("max_tokens", "thinking_budget_tokens", "presence_penalty", "max_tool_result_tokens")
+            k: live.get(k)
+            for k in (
+                "max_tokens",
+                "thinking_budget_tokens",
+                "presence_penalty",
+                "max_tool_result_tokens",
+            )
         }
         for number in args.rung:
             for repeat in range(1, args.repeat + 1):
-                record = run_once(RUNGS[number], args.mode, args.profile, repeat, args.out, args.deadline, versions, args.guards)
+                record = run_once(
+                    RUNGS[number],
+                    args.mode,
+                    args.profile,
+                    repeat,
+                    args.out,
+                    args.deadline,
+                    versions,
+                    args.guards,
+                )
                 row = table_row(record)
                 with table.open("a") as stream:
                     stream.write(row)

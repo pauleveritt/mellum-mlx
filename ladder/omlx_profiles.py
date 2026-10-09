@@ -95,10 +95,14 @@ def apply_profile(client: SettingsClient, model_id: str, name: str) -> dict:
 
 
 @contextmanager
-def profile(client: SettingsClient, model_id: str, name: str, settings_path: Path) -> Iterator[dict]:
+def profile(
+    client: SettingsClient, model_id: str, name: str, settings_path: Path
+) -> Iterator[dict]:
     settings_path = Path(settings_path)
     snapshot = client.get_settings(model_id)
-    backup = settings_path.with_name(f"{settings_path.name}.bak-ladder-{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}")
+    backup = settings_path.with_name(
+        f"{settings_path.name}.bak-ladder-{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}"
+    )
     if settings_path.exists():
         shutil.copy2(settings_path, backup)
     try:
@@ -109,7 +113,15 @@ def profile(client: SettingsClient, model_id: str, name: str, settings_path: Pat
             client.put_settings(model_id, wanted)
             live = client.get_settings(model_id)
         except Exception as error:
-            raise RestoreFailed(f"restore of {model_id} failed ({error!r}); original settings are in {backup}") from error
-        stuck = {key: (value, live.get(key)) for key, value in wanted.items() if live.get(key) != value}
+            raise RestoreFailed(
+                f"restore of {model_id} failed ({error!r}); original settings are in {backup}"
+            ) from error
+        stuck = {
+            key: (value, live.get(key))
+            for key, value in wanted.items()
+            if live.get(key) != value
+        }
         if stuck:
-            raise RestoreFailed(f"restore of {model_id} did not take: {stuck}; original settings are in {backup}")
+            raise RestoreFailed(
+                f"restore of {model_id} did not take: {stuck}; original settings are in {backup}"
+            )

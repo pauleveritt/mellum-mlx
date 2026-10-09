@@ -12,7 +12,7 @@ non-zero. After 45 runs with prompt v3 (phases 0b, 1, 1b):
 | column | runs | guard | decision |
 | --- | --- | --- | --- |
 | `write_shrink` (fragment-as-whole-file clobber) | 0 | new-file-only `write` | **dormant** |
-| `max_identical_streak` ≥ 5 | 0 (largest 2) | loop breaker | **dormant** |
+| identical call repeated ≥ 5 times within the breaker's 20-call window (`max_identical_in_window`) | 4 of 105 runs across all phases, three of which passed | loop breaker | **dormant** — enabling it would have blocked re-reads in passing runs |
 | `deadline_hit` | 0 | step budget | **dormant** |
 | `empty_final` | 7, including all 5 failures | empty-final nudge | **enabled** |
 
@@ -28,6 +28,15 @@ Command:
 ```bash
 uv run python -m ladder.run_ladder --profile baseline --guards --rung 1 --rung 2 --rung 3 --rung 4 --rung 5 --repeat 3 --deadline 600 --out docs/research/ladder/phase2-guards-v3
 ```
+
+A correction made during the final review: the dormancy decision was first
+taken on `max_identical_streak` (adjacent repeats only, largest 2), but the
+ported loop breaker counts repeats of one call anywhere in a 20-call window.
+Rescored with that metric, four runs reach the threshold (phase 0 rung 2 r2,
+phase 0b rung 5 r2, phase 1 rung 3 r2, phase 2 rung 5 r3); three of them
+passed, so the breaker would have refused legitimate re-reads. The decision
+stands on the corrected evidence, and `max_identical_in_window` is now a
+scorer column.
 
 ## Result
 

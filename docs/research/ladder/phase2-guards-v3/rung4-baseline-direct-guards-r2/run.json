@@ -55,7 +55,8 @@
     "bash_file_mutations": 0,
     "max_identical_streak": 1,
     "write_shrink": 0,
-    "nudges": 2
+    "nudges": 2,
+    "max_identical_in_window": 2
   },
   "diff_stat": " totals.py | 16 +++++++++++++++-\n 1 file changed, 15 insertions(+), 1 deletion(-)\n",
   "files_created": [],

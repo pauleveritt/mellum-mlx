@@ -50,7 +50,8 @@
     "bash_file_mutations": 0,
     "max_identical_streak": 1,
     "write_shrink": 0,
-    "nudges": 0
+    "nudges": 0,
+    "max_identical_in_window": 1
   },
   "diff_stat": " calculator.js | 2 +-\n 1 file changed, 1 insertion(+), 1 deletion(-)\n",
   "files_created": [],

@@ -56,7 +56,8 @@
     "bash_file_mutations": 0,
     "max_identical_streak": 1,
     "write_shrink": 0,
-    "nudges": 0
+    "nudges": 0,
+    "max_identical_in_window": 3
   },
   "diff_stat": " export.py |  6 +++++-\n render.py |  9 +++++++--\n totals.py | 23 ++++++++++++++++++++++-\n 3 files changed, 34 insertions(+), 4 deletions(-)\n",
   "files_created": [],

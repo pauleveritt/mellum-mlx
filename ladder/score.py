@@ -13,11 +13,17 @@ import re
 from dataclasses import asdict, dataclass, field
 
 _QUOTED = re.compile(r"'[^']*'|\"(?:\\.|[^\"\\])*\"")
-_HEREDOC = re.compile(r"<<-?\s*(['\"]?)(\w+)\1[^\n]*\n.*?(?:\n\2\s*$|\Z)", re.S | re.M)
-_HEREDOC_OPEN = re.compile(r"<<-?\s*['\"]?\w+")
+_HEREDOC = re.compile(
+    r"<<-?\s*(['\"]?)(\w+)\1[^\n]*\n.*?(?:\n\2\s*$|\Z)", re.DOTALL | re.MULTILINE
+)
 _NULL_SINK = re.compile(r"\d?>>?\s*/dev/null|\d>&\d|&>\s*/dev/null|\btee\s+/dev/null")
 _REDIRECT_TO_PATH = re.compile(r"(?<![<>|&=\-])>{1,2}\s*(?!&)[\w./~$-]")
-_WRITING_COMMAND = re.compile(r"(?:^|[;&|]\s*)(?:tee\s+(?!-)|sed\s+-[a-zA-Z]*i|perl\s+-[a-zA-Z]*i|mv\s|cp\s)")
+_WRITING_COMMAND = re.compile(
+    r"(?:^|[;&|]\s*)(?:tee\s+(?!-)|sed\s+-[a-zA-Z]*i|perl\s+-[a-zA-Z]*i|mv\s|cp\s)"
+)
+
+
+LOOP_WINDOW = 20
 
 
 def bash_mutates(command: str) -> bool:
@@ -31,11 +37,7 @@ def bash_mutates(command: str) -> bool:
     text = _HEREDOC.sub(lambda m: m.group(0).split("\n", 1)[0], command)
     text = _QUOTED.sub("", text)
     text = _NULL_SINK.sub("", text)
-    if _REDIRECT_TO_PATH.search(text):
-        return True
-    if _WRITING_COMMAND.search(text):
-        return True
-    return False
+    return bool(_REDIRECT_TO_PATH.search(text) or _WRITING_COMMAND.search(text))
 
 
 def call_key(name: str, payload: object) -> str:
@@ -56,6 +58,9 @@ class Score:
     max_identical_streak: int = 0
     write_shrink: int = 0
     nudges: int = 0
+    # Repeats of one call within the loop breaker's 20-call window: the metric
+    # the guard uses, as opposed to max_identical_streak (adjacent only).
+    max_identical_in_window: int = 0
 
     def as_row(self) -> dict:
         row = asdict(self)
@@ -72,10 +77,13 @@ def _path(payload: object) -> str | None:
     return None
 
 
-def score(events: list[dict], baseline_paths: set[str], baseline_lines: dict[str, int]) -> Score:
+def score(
+    events: list[dict], baseline_paths: set[str], baseline_lines: dict[str, int]
+) -> Score:
     result = Score()
     streak = 0
     last_key = None
+    window: list[str] = []
     for event in events:
         kind = event.get("type")
         if kind == "provider_request":
@@ -97,6 +105,11 @@ def score(events: list[dict], baseline_paths: set[str], baseline_lines: dict[str
             streak = streak + 1 if key == last_key else 1
             last_key = key
             result.max_identical_streak = max(result.max_identical_streak, streak)
+            window.append(key)
+            del window[:-LOOP_WINDOW]
+            result.max_identical_in_window = max(
+                result.max_identical_in_window, window.count(key)
+            )
             if name == "write":
                 path = _path(payload)
                 if path and path in baseline_paths:
@@ -115,7 +128,11 @@ def score(events: list[dict], baseline_paths: set[str], baseline_lines: dict[str
             if event.get("isError"):
                 result.tool_errors += 1
             if event["toolName"] == "edit":
-                if "not found" in content or "oldString" in content or "Could not find" in content:
+                if (
+                    "not found" in content
+                    or "oldString" in content
+                    or "Could not find" in content
+                ):
                     result.edit_anchor_failures += 1
                 if "No changes made" in content:
                     result.noop_edits += 1
