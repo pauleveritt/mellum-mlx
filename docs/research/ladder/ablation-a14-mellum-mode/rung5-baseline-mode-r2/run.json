@@ -1,0 +1,84 @@
+{
+  "rung": 5,
+  "repeat": 2,
+  "profile": "baseline",
+  "mode": "mode",
+  "harness": "pi",
+  "plain": false,
+  "guards": false,
+  "subagents_config": null,
+  "strip_thinking": null,
+  "budget_hook": null,
+  "guards_env": null,
+  "prompt_version": null,
+  "prompt_file": null,
+  "prompt_mode": null,
+  "thinking": null,
+  "versions": {
+    "pi": "1.0.2",
+    "omlx": "0.6.4",
+    "model_settings": {
+      "max_tokens": 4096,
+      "thinking_budget_tokens": null,
+      "presence_penalty": 0.0,
+      "max_tool_result_tokens": null
+    }
+  },
+  "sentence": "the export is missing the totals row",
+  "started": 1791552141.949713,
+  "wall_seconds_untrusted": 156.5,
+  "deadline_hit": false,
+  "stop_reason": "stop",
+  "final_text_chars": 602,
+  "thinking_reentries": 0,
+  "final_text_is": "worker",
+  "parent": null,
+  "baseline_lines": {
+    "test_export.py": 19,
+    ".gitignore": 4,
+    "export.py": 5,
+    "pyproject.toml": 11,
+    "totals.py": 4,
+    "uv.lock": 79,
+    "exports_legacy.py": 3,
+    "render.py": 2
+  },
+  "check": {
+    "passed": true,
+    "tests_unchanged": true,
+    "details": {
+      "decoy_untouched": true
+    }
+  },
+  "score": {
+    "requests": 16,
+    "largest_prompt_chars": 54424,
+    "tool_calls_by_name": {
+      "ls": 1,
+      "read": 7,
+      "bash": 3,
+      "edit": 3
+    },
+    "tool_errors": 2,
+    "edit_anchor_failures": 0,
+    "noop_edits": 0,
+    "write_existing": 0,
+    "bash_file_mutations": 0,
+    "max_identical_streak": 1,
+    "write_shrink": 0,
+    "nudges": 1,
+    "max_identical_in_window": 1,
+    "loop_breaker_would_block": 0,
+    "effective_params": {
+      "temperature": 1,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0,
+      "max_tokens": 16384,
+      "presence_penalty": 0
+    }
+  },
+  "diff_stat": " export.py | 10 ++++++++--\n render.py |  8 ++++++--\n totals.py | 11 ++++++++++-\n 3 files changed, 24 insertions(+), 5 deletions(-)\n",
+  "files_created": [],
+  "workspace": "/var/folders/m4/jc_jynrj6z10mk0t80pkj8l80000gn/T/ladder-o_6itz7w/rung5"
+}

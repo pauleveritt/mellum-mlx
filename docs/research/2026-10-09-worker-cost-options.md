@@ -42,6 +42,11 @@ build for Mellum: the scheduler only builds its budget processor when a
 reasoning parser is configured for the model, and none is. There is
 currently no per-turn cap on Mellum's thinking through oMLX.
 
+**Measured after (A14):** the Mellum mode (3a) is built and measured:
+in the operator's own profile, same sampling, 10/15 → 14/15, rung 5 from
+0/3 to 3/3, prefill −78%, wall time unchanged (70 vs 72 s). Recommendation
+2 is done; it ships as `/mellum on|off`.
+
 ## 2. Minor modifications to the current recipe
 
 | change | measured? | effect | cost to adopt |

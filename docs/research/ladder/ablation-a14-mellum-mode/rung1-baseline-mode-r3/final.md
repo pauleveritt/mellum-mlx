@@ -1,0 +1,1 @@
+The cart total calculation has been fixed to consider item quantities. The tests pass successfully.

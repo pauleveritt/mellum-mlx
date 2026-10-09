@@ -1,0 +1,1 @@
+Added balance() function that sums the entries, and added a test for it. Tests pass.

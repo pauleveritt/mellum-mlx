@@ -1,0 +1,1 @@
+Added `balance()` function to sum entries and included a test case verifying it works correctly. The tests now pass successfully.

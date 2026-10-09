@@ -192,12 +192,42 @@ where the briefed child needs fewer requests (14 vs 20) and never more than
 request carries. The options for cutting this further, measured and
 projected, are in [2026-10-09-worker-cost-options.md](research/2026-10-09-worker-cost-options.md).
 
+## 4b. The second way: Mellum mode in your own session
+
+`.pi/mellum/mellum-mode.ts` turns your current session into the worker
+without a parent, a brief, or a subagent:
+
+```bash
+pi -e .pi/mellum/mellum-mode.ts -e .pi/mellum/mellum-guards.ts
+```
+
+then `/mellum on`, type the task, and `/mellum off` when done. While the
+mode is on, the model is Mellum, the tools are the worker's seven, and
+every request is rewritten before it leaves: the system prompt is v5, the
+messages are only those since `/mellum on` (Superpowers' bootstrap and
+your earlier conversation are not sent), and pi-subagents' re-added tools
+are removed. Your session keeps everything, so after `/mellum off` your
+usual model sees what Mellum did.
+
+Measured in the ladder ([A14](research/ladder/ablation-a14-mellum-mode/README.md)),
+same profile and sampling as "Mellum as the primary agent" above: 10/15
+becomes 14/15, rung 5 from 0/3 to 3/3, the model reads 606 characters of
+prompt instead of 17k, and the wall time is the same (prefill is cached;
+the time is generation). What you give up against delegation is the
+parent's independent test run afterwards; run the tests yourself.
+
+Two cautions: the filter runs last among extensions' payload hooks, so
+another extension that rewrites requests would conflict silently; and the
+mode's tool results stay in your session, so a long Mellum task leaves
+your parent model a large next request.
+
 ## 5. Measuring
 
 ```bash
 uv run python -m ladder.run_ladder --mode direct   --guards --profile baseline --rung 1 --rung 2 --rung 3 --rung 4 --rung 5 --repeat 3 --out docs/research/ladder/<name>
 uv run python -m ladder.run_ladder --mode delegated --profile baseline --guards --rung 1 --rung 2 --rung 3 --rung 4 --rung 5 --repeat 3 --deadline 900 --out docs/research/ladder/<name>
 uv run python -m ladder.run_ladder --mode primary   --profile baseline --rung 1 --rung 2 --rung 3 --rung 4 --rung 5 --repeat 3 --deadline 600 --out docs/research/ladder/<name>           # your profile, Mellum as the model
+uv run python -m ladder.run_ladder --mode mode      --profile baseline --rung 1 --rung 2 --rung 3 --rung 4 --rung 5 --repeat 3 --deadline 600 --out docs/research/ladder/<name>   # Mellum mode in your profile
 uv run python -m ladder.run_ladder --mode primary   --profile baseline --plain --rung 1 --rung 2 --rung 3 --rung 4 --rung 5 --repeat 3 --deadline 600 --out docs/research/ladder/<name>   # bare Pi: no extensions, skills, or context files
 MELLUM_GUARDS='{"emptyFinalNudge":3,"loopBreaker":true}' uv run python -m ladder.run_ladder --mode direct --guards --profile tuned ...   # override which guards run; recorded as guards_env
 uv run python -m ladder.summarize docs/research/ladder/<a> docs/research/ladder/<b>
