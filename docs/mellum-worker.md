@@ -51,6 +51,7 @@ every request from its `models.json` entry. So:
 | `max_tool_result_tokens` | server profile only | off — the largest tool result in 30 runs was 2,639 characters |
 | `forced_ct_kwargs: ["enable_thinking"]` | server profile only | on — a client cannot switch thinking off |
 | thinking level (`thinking:` in the agent file, `--thinking`) | nowhere | inert: Pi's level does not reach an `openai-completions` provider; two runs at "high" and "medium" sent byte-identical requests ([ablation A5](research/ladder/ablation-a5-thinking-medium/README.md)) |
+| `thinking_budget` (request field) | a hook could send it (`ladder/thinking-budget.js`) | not enforced for this model: oMLX needs a reasoning parser configured to build its budget processor ([A13](research/ladder/ablation-a13-budget-medium/README.md)) |
 
 Verify with one request through the proxy or Pi's `before_provider_request`
 hook (`ladder/record-pi.js`) that the values you expect are the values sent;

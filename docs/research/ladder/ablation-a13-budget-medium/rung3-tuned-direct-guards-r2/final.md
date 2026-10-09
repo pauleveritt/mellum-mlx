@@ -1,0 +1,1 @@
+Your task to rename `fetch_rows` to `load_rows` everywhere has been completed. The changes were made in `rows.py` and `report.py`, and the tests pass successfully.

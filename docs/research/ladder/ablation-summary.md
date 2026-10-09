@@ -21,6 +21,7 @@ scorer column that was zero becomes non-zero.
 | [A10](ablation-a10-delegated-v5/README.md) | (delegated check, prompt v5, as shipped) | 15/15 | ships | no re-dispatch, no empty child turn |
 | [A11](ablation-a11-delegated-nointercom/README.md) | pi-subagents' intercom block (operator config, optional) | 15/15 | optional | child prompt 2,711 → 1,220 chars, prefill −20%, wall unchanged |
 | [A12](ablation-a12-strip-thinking/README.md) | earlier turns' thinking from each request | 14/15 | **no** | prefill −57% but output tokens +73%, wall 54 → 87 s: the replayed thinking is working memory |
+| [A13](ablation-a13-budget-medium/README.md) | (request-level `thinking_budget` 2,048 via a hook) | 15/15 | inert | reaches the server but is not enforced: oMLX builds the budget processor only with a reasoning parser configured; no forced close in 205 turns |
 
 ## The worker, before and after
 

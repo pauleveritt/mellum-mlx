@@ -1,0 +1,1 @@
+Fixed the cart total calculation to consider quantity by updating the reduce function in calculator.js to multiply priceCents by item.quantity. Tests pass.

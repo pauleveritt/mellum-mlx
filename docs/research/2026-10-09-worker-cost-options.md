@@ -36,6 +36,12 @@ sees (output tokens +73%, empty turns ×3). Context is the cheap side on a
 cached local server; generation is the expensive side. Every option below
 that filters context must leave prior thinking in place.
 
+**Measured after (A13):** a hook that sends oMLX's request-level
+`thinking_budget` works at the wire and is not enforced by this server
+build for Mellum: the scheduler only builds its budget processor when a
+reasoning parser is configured for the model, and none is. There is
+currently no per-turn cap on Mellum's thinking through oMLX.
+
 ## 2. Minor modifications to the current recipe
 
 | change | measured? | effect | cost to adopt |

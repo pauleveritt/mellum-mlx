@@ -1,0 +1,1 @@
+The export now includes the totals row when the `totals=True` option is passed to `export_csv`. The necessary fixes were made to `export.py`, `totals.py`, and `render.py`, and all tests pass.
