@@ -160,7 +160,7 @@ test("package version matches the newest git tag when one exists", () => {
 
 - [ ] **Step 5: Run the test to verify it fails**
 
-Run: `cd /Users/pauleveritt/projects/pauleveritt/mellum-worker && node --test tests/`
+Run: `cd /Users/pauleveritt/projects/pauleveritt/mellum-worker && node --test 'tests/*.test.mjs'`
 Expected: FAIL on "main points at an existing file" and "every pi extension and skills path exists" (paths do not exist yet). The other two pass.
 
 - [ ] **Step 6: Commit the skeleton**
@@ -1410,7 +1410,7 @@ command. Report what you saw; do not loosen any setting to make it pass.
 
 - [ ] **Step 7: Run the skill tests and the full suite**
 
-Run: `node --test tests/`
+Run: `node --test 'tests/*.test.mjs'`
 Expected: all pass, including the manifest test's "skills path exists".
 
 - [ ] **Step 8: Commit**
@@ -1664,7 +1664,7 @@ version and the tag match, and a test checks it.
 
 - [ ] **Step 7: Run the full suite**
 
-Run: `node --test tests/`
+Run: `node --test 'tests/*.test.mjs'`
 Expected: all pass. If the link test reports a broken link in `docs/recipe.md`, fix that link and re-run.
 
 - [ ] **Step 8: Commit**
