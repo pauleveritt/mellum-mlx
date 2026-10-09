@@ -32,6 +32,7 @@ RECORD_EXT = ROOT / "ladder" / "record-pi.js"
 STRIP_EXT = ROOT / "ladder" / "strip-thinking.js"
 BUDGET_EXT = ROOT / "ladder" / "thinking-budget.js"
 MODE_EXT = ROOT / ".pi" / "mellum" / "mellum-mode.ts"
+BRIEFS = ROOT / "ladder" / "briefs"
 GUARDS_EXT = ROOT / ".pi" / "mellum" / "mellum-guards.ts"
 MODEL = "omlx/Mellum2.1-12B-A2.5B-Thinking-6bit"
 MODEL_ID = MODEL.split("/", 1)[1]
@@ -198,6 +199,52 @@ def build_pi_mode_args(sentence: str) -> list[str]:
     ]
 
 
+def split_brief(text: str) -> list[str]:
+    """One prompt per `## Step` section; the header (task, test command, constraints) rides with step 1."""
+    head, *parts = re.split(r"^## Step \d+\s*$", text, flags=re.MULTILINE)
+    steps = [part.strip() for part in parts if part.strip()]
+    if not steps:
+        return [text.strip()]
+    steps[0] = head.strip() + "\n\n" + steps[0]
+    return steps
+
+
+def build_pi_chunk_args(
+    session_dir: Path,
+    session_id: str,
+    step: str,
+    guards: bool,
+    prompt: Path = PROMPT_FILE,
+) -> list[str]:
+    """One step of a chunked brief, continuing the same session; the worker prompt replaces Pi's."""
+    args = [
+        "pi",
+        "-p",
+        "--mode",
+        "json",
+        "--no-extensions",
+        "--no-skills",
+        "--no-prompt-templates",
+        "--no-themes",
+        "--no-context-files",
+        "--session-dir",
+        str(session_dir),
+        "--session-id",
+        session_id,
+        "--model",
+        MODEL,
+        "--tools",
+        TOOLS,
+        "--system-prompt",
+        prompt.read_text(),
+        "-e",
+        str(RECORD_EXT),
+    ]
+    if guards:
+        args += ["-e", str(GUARDS_EXT)]
+    return [*args, step]
+
+
 def parse_parent_json(stdout: str) -> dict:
     """What the parent did: whether it launched the worker, the brief it wrote, its final text."""
     brief, final, messages, calls = "", "", 0, 0
@@ -337,6 +384,20 @@ def run_once(
         )
         env = child_env(dict(os.environ), str(trace), agent_dir, offline=False)
         args = build_pi_primary_args(rung.sentence, plain)
+    elif mode in ("chunked", "brief"):
+        agent_dir = direct_agent_dir(scratch / "pi-agent", prof)
+        env = child_env(dict(os.environ), str(trace), agent_dir, offline=True)
+        brief_text = (BRIEFS / f"rung{rung.number}.md").read_text()
+        if mode == "chunked":
+            steps = split_brief(brief_text)
+            args = build_pi_chunk_args(
+                scratch / "sessions", "run", steps[0], guards, prompt
+            )
+        else:
+            steps = [brief_text]
+            args = build_pi_direct_args(
+                trace, brief_text, guards, prompt, "replace", thinking
+            )
     elif mode == "mode":
         agent_dir = mirror_agent_dir(
             Path.home() / ".pi" / "agent", scratch / "pi-agent", [ws]
@@ -361,26 +422,44 @@ def run_once(
     started = time.time()
     deadline_hit = False
     stdout = ""
-    try:
-        proc = subprocess.run(
-            args,
-            cwd=ws,
-            env=env,
-            stdin=subprocess.DEVNULL,
-            capture_output=True,
-            text=True,
-            timeout=deadline,
-            check=False,
-        )
-        stdout = proc.stdout + ("\n[stderr]\n" + proc.stderr if proc.stderr else "")
-    except subprocess.TimeoutExpired as error:
-        deadline_hit = True
-        captured = error.stdout or b""
-        stdout = (
-            captured.decode(errors="replace")
-            if isinstance(captured, bytes)
-            else str(captured)
-        )
+    prompts = 1
+    step_args = [args]
+    if mode == "chunked":
+        prompts = len(steps)
+        step_args = [
+            build_pi_chunk_args(scratch / "sessions", "run", step, guards, prompt)
+            for step in steps
+        ]
+    for i, step_argv in enumerate(step_args):
+        remaining = deadline - (time.time() - started)
+        if remaining <= 0:
+            deadline_hit = True
+            break
+        if i:
+            stdout += f"\n[step {i + 1}]\n"
+        try:
+            proc = subprocess.run(
+                step_argv,
+                cwd=ws,
+                env=env,
+                stdin=subprocess.DEVNULL,
+                capture_output=True,
+                text=True,
+                timeout=remaining,
+                check=False,
+            )
+            stdout += proc.stdout + (
+                "\n[stderr]\n" + proc.stderr if proc.stderr else ""
+            )
+        except subprocess.TimeoutExpired as error:
+            deadline_hit = True
+            captured = error.stdout or b""
+            stdout += (
+                captured.decode(errors="replace")
+                if isinstance(captured, bytes)
+                else str(captured)
+            )
+            break
     wall = time.time() - started
     stop_reason, final_text, thinking_reentries = parse_pi_json(
         stdout, with_reentries=True
@@ -397,6 +476,10 @@ def run_once(
         "guards": guards,
         "subagents_config": subagents_config,
         "strip_thinking": strip_thinking if mode == "direct" else None,
+        "prompts": prompts,
+        "brief_file": f"ladder/briefs/rung{rung.number}.md"
+        if mode in ("chunked", "brief")
+        else None,
         "budget_hook": budget_hook if mode == "direct" else None,
         "guards_env": json.loads(os.environ["MELLUM_GUARDS"])
         if os.environ.get("MELLUM_GUARDS")
@@ -486,7 +569,9 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--harness", choices=["pi"], default="pi")
     parser.add_argument(
-        "--mode", choices=["direct", "delegated", "primary", "mode"], default="direct"
+        "--mode",
+        choices=["direct", "delegated", "primary", "mode", "chunked", "brief"],
+        default="direct",
     )
     parser.add_argument("--profile", choices=sorted(PROFILES), required=True)
     parser.add_argument("--rung", type=int, action="append", required=True)

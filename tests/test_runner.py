@@ -317,3 +317,25 @@ def test_mode_env_activates_the_mode_headlessly():
     env = child_env({}, "/t", None, offline=False, mode=True)
     assert env["MELLUM_MODE"] == "1"
     assert "MELLUM_MODE" not in child_env({}, "/t", None, offline=False)
+
+
+def test_split_brief_yields_one_prompt_per_step_with_the_header_prepended_to_the_first():
+    from ladder.run_ladder import split_brief
+
+    brief = "# Task: t\n\nTest command: x\n\n## Step 1\nread\n\n## Step 2\nedit\n"
+    steps = split_brief(brief)
+    assert len(steps) == 2
+    assert steps[0].startswith("# Task: t") and steps[0].rstrip().endswith("read")
+    assert steps[1].strip() == "edit"
+
+
+def test_chunk_args_continue_one_session_and_load_guards_and_recorder(tmp_path):
+    from ladder.run_ladder import GUARDS_EXT, RECORD_EXT, build_pi_chunk_args
+
+    args = build_pi_chunk_args(tmp_path / "sessions", "run", "step text", True)
+    assert args[args.index("--session-dir") + 1] == str(tmp_path / "sessions")
+    assert args[args.index("--session-id") + 1] == "run"
+    assert "--no-session" not in args and "--system-prompt" in args
+    exts = [args[i + 1] for i, a in enumerate(args) if a == "-e"]
+    assert str(GUARDS_EXT) in exts and str(RECORD_EXT) in exts
+    assert args[-1] == "step text"
