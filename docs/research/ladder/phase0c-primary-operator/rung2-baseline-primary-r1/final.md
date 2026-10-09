@@ -1,0 +1,1 @@
+Added `balance()` function to `ledger.py` that sums the amounts of `Entry` objects, and added a test `test_calculates_balance()` in `test_ledger.py`. Implemented using test-driven-development: wrote failing test first, then minimal implementation to pass, verified all tests pass.
