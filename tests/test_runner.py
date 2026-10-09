@@ -210,3 +210,30 @@ def test_primary_plain_args_strip_extensions_skills_and_context_but_keep_the_rec
     assert args[args.index("--model") + 1] == MODEL
     assert args[args.index("-e") + 1] == str(RECORD_EXT)
     assert args[-1] == "fix it"
+
+
+def test_direct_args_can_replace_the_system_prompt_and_set_thinking(tmp_path):
+    """The shipped worker uses systemPromptMode: replace; the ladder must be able to measure that."""
+    from ladder.run_ladder import build_pi_direct_args
+
+    prompt = tmp_path / "v4.md"
+    prompt.write_text("facts")
+    args = build_pi_direct_args(
+        tmp_path / "t",
+        "fix it",
+        False,
+        prompt=prompt,
+        prompt_mode="replace",
+        thinking="low",
+    )
+    assert "--append-system-prompt" not in args
+    assert args[args.index("--system-prompt") + 1] == "facts"
+    assert args[args.index("--thinking") + 1] == "low"
+
+
+def test_direct_args_default_to_append_mode_with_the_v3_prompt(tmp_path):
+    from ladder.run_ladder import PROMPT_FILE, build_pi_direct_args
+
+    args = build_pi_direct_args(tmp_path / "t", "fix it", False)
+    assert args[args.index("--append-system-prompt") + 1] == str(PROMPT_FILE)
+    assert "--system-prompt" not in args

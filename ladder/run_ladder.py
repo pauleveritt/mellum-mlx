@@ -42,7 +42,21 @@ HEADER = (
 )
 
 
-def build_pi_direct_args(trace: Path, sentence: str, guards: bool = False) -> list[str]:
+def build_pi_direct_args(
+    trace: Path,
+    sentence: str,
+    guards: bool = False,
+    prompt: Path = PROMPT_FILE,
+    prompt_mode: str = "append",
+    thinking: str = "high",
+) -> list[str]:
+    """The worker alone. `append` keeps Pi's base prompt under the worker prompt (phases 0-2);
+    `replace` sends the worker prompt only, which is what the shipped agent file does."""
+    prompt_args = (
+        ["--system-prompt", prompt.read_text()]
+        if prompt_mode == "replace"
+        else ["--append-system-prompt", str(prompt)]
+    )
     args = [
         "pi",
         "-p",
@@ -55,13 +69,12 @@ def build_pi_direct_args(trace: Path, sentence: str, guards: bool = False) -> li
         "--no-context-files",
         "--no-session",
         "--thinking",
-        "high",
+        thinking,
         "--model",
         MODEL,
         "--tools",
         TOOLS,
-        "--append-system-prompt",
-        str(PROMPT_FILE),
+        *prompt_args,
         "-e",
         str(RECORD_EXT),
     ]
@@ -250,6 +263,9 @@ def run_once(
     guards: bool,
     skill: bool = False,
     plain: bool = False,
+    prompt: Path = PROMPT_FILE,
+    prompt_mode: str = "append",
+    thinking: str = "high",
 ) -> dict:
     scratch = Path(tempfile.mkdtemp(prefix="ladder-"))
     ws = prepare_workspace(rung, scratch)
@@ -271,7 +287,9 @@ def run_once(
     else:
         agent_dir = direct_agent_dir(scratch / "pi-agent", prof)
         env = child_env(dict(os.environ), str(trace), agent_dir, offline=True)
-        args = build_pi_direct_args(trace, rung.sentence, guards)
+        args = build_pi_direct_args(
+            trace, rung.sentence, guards, prompt, prompt_mode, thinking
+        )
     started = time.time()
     deadline_hit = False
     stdout = ""
@@ -314,6 +332,11 @@ def run_once(
         else None,
         "skill": skill,
         "prompt_version": PROMPT_VERSION,
+        "prompt_file": str(prompt.relative_to(ROOT))
+        if prompt.is_relative_to(ROOT)
+        else str(prompt),
+        "prompt_mode": prompt_mode,
+        "thinking": thinking,
         "versions": versions,
         "sentence": rung.sentence,
         "started": started,
@@ -406,6 +429,21 @@ def main(argv: list[str] | None = None) -> None:
         action="store_true",
         help="primary mode: no extensions, skills, or context files (Pi's base prompt only)",
     )
+    parser.add_argument(
+        "--prompt",
+        type=Path,
+        default=PROMPT_FILE,
+        help="direct mode: worker prompt file (default prompts/mellum-worker.md)",
+    )
+    parser.add_argument(
+        "--prompt-mode",
+        choices=["append", "replace"],
+        default="append",
+        help="direct mode: append to Pi's base prompt (phases 0-2) or replace it (the shipped agent file)",
+    )
+    parser.add_argument(
+        "--thinking", default="high", help="direct mode: Pi thinking level"
+    )
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--omlx", default="http://127.0.0.1:8001")
     args = parser.parse_args(argv)
@@ -444,6 +482,9 @@ def main(argv: list[str] | None = None) -> None:
                     args.guards,
                     args.skill,
                     args.plain,
+                    args.prompt,
+                    args.prompt_mode,
+                    args.thinking,
                 )
                 row = table_row(record)
                 with table.open("a") as stream:
