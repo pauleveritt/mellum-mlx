@@ -30,7 +30,11 @@ on its own (see the ladder results below).
 ## 2. Inference server (oMLX)
 
 Serve `Mellum2.1-12B-A2.5B-Thinking-6bit` on oMLX 0.6.4 as in the main
-[README](../README.md): 56,000-token context window, native hybrid cache,
+[README](../README.md). The converted model is published at
+<https://huggingface.co/pauleveritt/Mellum2.1-12B-A2.5B-Thinking-6bit>
+(9.9 GB, two safetensors shards, MLX 6-bit), so it can be pulled with
+`hf download pauleveritt/Mellum2.1-12B-A2.5B-Thinking-6bit` instead of
+converted. Settings: 56,000-token context window, native hybrid cache,
 cache quantization off, one concurrent request.
 
 **Which settings actually apply.** oMLX gives a request's sampling and cap
