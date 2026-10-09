@@ -1,0 +1,1 @@
+Bug: the cart total ignores item quantity. The function totalCents in calculator.js sums item.priceCents only. It must sum item.priceCents * item.quantity for each item. Fix calculator.js so the test command `node --test calculator.test.js` exits 0. Reply with the files changed and the test output pasted verbatim.
