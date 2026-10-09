@@ -2,7 +2,6 @@
 name: mellum-worker
 description: Bounded coding task on the local Mellum model
 model: omlx/Mellum2.1-12B-A2.5B-Thinking-6bit
-thinking: high
 advertise: true
 systemPromptMode: replace
 inheritProjectContext: false
@@ -11,6 +10,7 @@ inheritSkills: false
 extensions:
 subagentOnlyExtensions: ./.pi/extensions/mellum-guards.ts
 tools: read, grep, find, ls, bash, edit, write
+excludeTools: contact_supervisor
 acceptance:
   level: none
   reason: the parent verifies the child by running the tests itself

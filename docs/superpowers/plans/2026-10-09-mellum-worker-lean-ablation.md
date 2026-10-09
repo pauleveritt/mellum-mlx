@@ -66,11 +66,11 @@ Lines whose removal cannot be measured in direct mode. Each is removed if
 pi-subagents' default already gives the same behaviour, and the result is
 confirmed by one 15-run delegated phase:
 
-- `excludeTools: contact_supervisor` — removed. The docs say `excludeTools`
-  narrows an explicit `tools` allowlist, and `contact_supervisor` is not in
-  the allowlist. The delegated run checks the child's advertised tool list
-  in its first request (phase 3a showed exactly the seven allowed tools); if
-  `contact_supervisor` appears without the line, it goes back.
+- `excludeTools: contact_supervisor` — **removed, then restored by A8.** The
+  docs read as if it only narrows the `tools` allowlist; the delegated run
+  showed pi-subagents injects `contact_supervisor` and a supervisor-protocol
+  prompt block into every child regardless, and two children called it.
+- `thinking: high` — removed after A5 showed the level never reaches oMLX.
 - `allowedAgents:` empty — removed. "An empty list denies every descendant
   launch. This only narrows an existing nesting grant": the worker has no
   `subagent` tool and no `allowNestedSubagents`, so there is nothing to narrow.

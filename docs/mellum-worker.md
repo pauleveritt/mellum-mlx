@@ -65,11 +65,15 @@ Project-local, nothing in `~/.pi/agent` changes:
   `inheritProjectContext/GlobalContext/Skills: false` (no AGENTS.md, no skills
   catalog), `extensions:` empty (no Superpowers in the child; pi-subagents warns
   about this on every launch — intended), `tools:` the seven file tools, and
+  `excludeTools: contact_supervisor` (pi-subagents injects that tool and a
+  supervisor-protocol prompt block into every child unless excluded; the
+  supervisor protocol is what Mellum failed, measured in
+  [ablation A8](research/ladder/ablation-a8-delegated-lean/README.md)), and
   `acceptance: level none` (the parent verifies by running the tests; an
   acceptance contract competed with the reply format and recorded a correct
-  run as rejected). Nothing else: the child has no `subagent` tool, so it
-  cannot launch descendants or reach a supervisor, and pi-subagents' default
-  launch context is `fresh`.
+  run as rejected). Nothing else: no `thinking:` (the level never reaches
+  oMLX), no `allowedAgents:` (the child has no `subagent` tool to narrow),
+  no `defaultContext:` (pi-subagents' default is `fresh`).
 - `prompts/mellum-worker.md` (v4) — the body, duplicated into the agent file;
   a test keeps them identical. Twelve facts and no procedure: what each tool
   does, how to find the test command, *the task is complete only when the
