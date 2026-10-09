@@ -1,0 +1,80 @@
+{
+  "rung": 1,
+  "repeat": 1,
+  "profile": "tuned",
+  "mode": "direct",
+  "harness": "pi",
+  "plain": false,
+  "guards": true,
+  "guards_env": {
+    "emptyFinalNudge": 3,
+    "loopBreaker": true
+  },
+  "skill": false,
+  "prompt_version": "v3",
+  "prompt_file": "prompts/ablation/v4a-no-procedure.md",
+  "prompt_mode": "replace",
+  "thinking": "high",
+  "versions": {
+    "pi": "1.0.2",
+    "omlx": "0.6.4",
+    "model_settings": {
+      "max_tokens": 16384,
+      "thinking_budget_tokens": 4096,
+      "presence_penalty": 0.5,
+      "max_tool_result_tokens": 4000
+    }
+  },
+  "sentence": "the cart total ignores quantity, fix it",
+  "started": 1791514640.605698,
+  "wall_seconds_untrusted": 11.5,
+  "deadline_hit": false,
+  "stop_reason": "stop",
+  "final_text_chars": 69,
+  "thinking_reentries": 0,
+  "final_text_is": "worker",
+  "parent": null,
+  "baseline_lines": {
+    "package.json": 1,
+    "calculator.test.js": 10,
+    ".gitignore": 4,
+    "calculator.js": 3
+  },
+  "check": {
+    "passed": true,
+    "tests_unchanged": true,
+    "details": {}
+  },
+  "score": {
+    "requests": 7,
+    "largest_prompt_chars": 11838,
+    "tool_calls_by_name": {
+      "ls": 1,
+      "read": 3,
+      "edit": 1,
+      "bash": 1
+    },
+    "tool_errors": 0,
+    "edit_anchor_failures": 0,
+    "noop_edits": 0,
+    "write_existing": 0,
+    "bash_file_mutations": 0,
+    "max_identical_streak": 1,
+    "write_shrink": 0,
+    "nudges": 0,
+    "max_identical_in_window": 1,
+    "loop_breaker_would_block": 0,
+    "effective_params": {
+      "temperature": 0,
+      "top_p": 1,
+      "top_k": 0,
+      "min_p": 0,
+      "seed": 42,
+      "max_tokens": 16384,
+      "presence_penalty": 0.5
+    }
+  },
+  "diff_stat": " calculator.js | 2 +-\n 1 file changed, 1 insertion(+), 1 deletion(-)\n",
+  "files_created": [],
+  "workspace": "/var/folders/m4/jc_jynrj6z10mk0t80pkj8l80000gn/T/ladder-9k7_y9sm/rung1"
+}

@@ -1,6 +1,6 @@
 # Phase 3b: delegated mode with the `delegate-to-mellum` skill available
 
-Date: 2026-10-08. Identical to [phase 3a](../phase3a-delegated-noskill/README.md)
+Date: 2026-10-08. *The skill was removed in the lean-down pass (ablation A7, 2026-10-09) on this record's evidence; it is in git history before commit `aa0995f`.* Identical to [phase 3a](../phase3a-delegated-noskill/README.md)
 except that the scratch workspace carries `.pi/skills/delegate-to-mellum/SKILL.md`,
 which Pi lists in the parent's skills catalog. Nothing forces the parent to
 read it. Three repeats per rung.

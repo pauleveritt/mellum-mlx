@@ -1,0 +1,1 @@
+Added balance() function and corresponding test. Tests pass.

@@ -231,7 +231,7 @@ def test_direct_args_can_replace_the_system_prompt_and_set_thinking(tmp_path):
     assert args[args.index("--thinking") + 1] == "low"
 
 
-def test_direct_args_default_to_append_mode_with_the_v3_prompt(tmp_path):
+def test_direct_args_default_to_append_mode_with_the_worker_prompt(tmp_path):
     from ladder.run_ladder import PROMPT_FILE, build_pi_direct_args
 
     args = build_pi_direct_args(tmp_path / "t", "fix it", False)

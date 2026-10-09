@@ -39,8 +39,8 @@ def mirror_agent_dir(source: Path, dest: Path, trusted: list[Path]) -> Path:
     return dest
 
 
-def prepare_pi_workspace(ws: Path, record_ext: Path, skill: bool) -> Path:
-    """Give a scratch workspace the worker definition with the ladder recorder, and optionally the skill."""
+def prepare_pi_workspace(ws: Path, record_ext: Path) -> Path:
+    """Give a scratch workspace the worker definition with the ladder recorder appended."""
     pi = ws / ".pi"
     (pi / "agents").mkdir(parents=True, exist_ok=True)
     (pi / "extensions").mkdir(exist_ok=True)
@@ -60,11 +60,6 @@ def prepare_pi_workspace(ws: Path, record_ext: Path, skill: bool) -> Path:
         for line in lines
     ]
     (pi / "agents" / "mellum-worker.md").write_text("".join(rewritten))
-    if skill:
-        shutil.copytree(
-            ROOT / ".pi" / "skills" / "delegate-to-mellum",
-            pi / "skills" / "delegate-to-mellum",
-        )
     return pi
 
 

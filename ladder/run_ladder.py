@@ -32,7 +32,7 @@ GUARDS_EXT = ROOT / ".pi" / "extensions" / "mellum-guards.ts"
 MODEL = "omlx/Mellum2.1-12B-A2.5B-Thinking-6bit"
 MODEL_ID = MODEL.split("/", 1)[1]
 TOOLS = "read,grep,find,ls,bash,edit,write"
-PROMPT_VERSION = "v3"
+PROMPT_VERSION = "v4"
 PARENT_PROMPT = "Use mellum-worker to do this: {sentence}"
 
 HEADER = (
@@ -261,7 +261,6 @@ def run_once(
     deadline: int,
     versions: dict,
     guards: bool,
-    skill: bool = False,
     plain: bool = False,
     prompt: Path = PROMPT_FILE,
     prompt_mode: str = "append",
@@ -272,7 +271,7 @@ def run_once(
     paths, lines = baseline_index(ws)
     trace = scratch / "trace.jsonl"
     if mode == "delegated":
-        prepare_pi_workspace(ws, RECORD_EXT, skill)
+        prepare_pi_workspace(ws, RECORD_EXT)
         agent_dir = mirror_agent_dir(
             Path.home() / ".pi" / "agent", scratch / "pi-agent", [ws]
         )
@@ -330,7 +329,6 @@ def run_once(
         "guards_env": json.loads(os.environ["MELLUM_GUARDS"])
         if os.environ.get("MELLUM_GUARDS")
         else None,
-        "skill": skill,
         "prompt_version": PROMPT_VERSION,
         "prompt_file": str(prompt.relative_to(ROOT))
         if prompt.is_relative_to(ROOT)
@@ -360,7 +358,7 @@ def run_once(
         ],
         "workspace": str(ws),
     }
-    variant = f"{'-guards' if guards else ''}{'-skill' if skill else ''}{'-plain' if plain else ''}"
+    variant = f"{'-guards' if guards else ''}{'-plain' if plain else ''}"
     run_dir = out / f"rung{rung.number}-{prof}-{mode}{variant}-r{repeat}"
     run_dir.mkdir(parents=True, exist_ok=True)
     (run_dir / "run.json").write_text(json.dumps(record, indent=2, default=str))
@@ -420,11 +418,6 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--deadline", type=int, default=600)
     parser.add_argument("--guards", action="store_true")
     parser.add_argument(
-        "--skill",
-        action="store_true",
-        help="delegated mode: give the parent the delegate-to-mellum skill",
-    )
-    parser.add_argument(
         "--plain",
         action="store_true",
         help="primary mode: no extensions, skills, or context files (Pi's base prompt only)",
@@ -480,7 +473,6 @@ def main(argv: list[str] | None = None) -> None:
                     args.deadline,
                     versions,
                     args.guards,
-                    args.skill,
                     args.plain,
                     args.prompt,
                     args.prompt_mode,

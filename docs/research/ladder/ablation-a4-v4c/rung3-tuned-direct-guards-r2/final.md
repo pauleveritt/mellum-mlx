@@ -1,0 +1,1 @@
+The test command exited with 0 (since it says "1 passed in 0.00s"). So the task is complete. We don't need to do anything else.

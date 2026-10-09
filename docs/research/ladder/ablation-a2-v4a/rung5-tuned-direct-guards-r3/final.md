@@ -1,0 +1,1 @@
+Export now includes totals row when requested.

@@ -69,17 +69,18 @@ Project-local, nothing in `~/.pi/agent` changes:
   run as rejected). Nothing else: the child has no `subagent` tool, so it
   cannot launch descendants or reach a supervisor, and pi-subagents' default
   launch context is `fresh`.
-- `prompts/mellum-worker.md` (v3) — the body, duplicated into the agent file;
-  a test keeps them identical. Facts, not rules of conduct: what each tool
+- `prompts/mellum-worker.md` (v4) — the body, duplicated into the agent file;
+  a test keeps them identical. Twelve facts and no procedure: what each tool
   does, how to find the test command, *the task is complete only when the
   test command exits 0*, and *if it fails, read, change, run again*. Those two
-  sentences took rung 5 from 0/3 to 3/3 ([phase 0b](research/ladder/phase0b-baseline-v3/README.md)).
+  sentences took rung 5 from 0/3 to 3/3 ([phase 0b](research/ladder/phase0b-baseline-v3/README.md));
+  the six-step procedure v3 carried was measured and removed ([ablation A2](research/ladder/ablation-a2-v4a/README.md)).
 - `.pi/extensions/mellum-guards.ts` — child-only guards, loaded through
   `subagentOnlyExtensions`. On by default: the empty-final nudge (cap 3)
   and the loop breaker. Dormant: new-file-only `write`, step budget. See §6.
-- `.pi/skills/delegate-to-mellum/SKILL.md` — a parent-side skill. Available
-  skills are read about one time in seven ([phase 3b](research/ladder/phase3b-delegated-skill/README.md));
-  treat it as documentation until it is injected unconditionally (backlog 3c).
+- No parent-side skill. One existed; it was read in 2 of 15 runs and the
+  pass rate was 15/15 with or without it ([phase 3b](research/ladder/phase3b-delegated-skill/README.md)),
+  so it was removed. Its content is §4's one paragraph on briefing.
 - `~/.pi/agent/models.json` omlx entry: `contextWindow 56000`, `maxTokens
   16384`, `thinkingFormat: qwen-chat-template`.
 

@@ -1,0 +1,85 @@
+{
+  "rung": 4,
+  "repeat": 2,
+  "profile": "tuned",
+  "mode": "direct",
+  "harness": "pi",
+  "plain": false,
+  "guards": true,
+  "guards_env": {
+    "emptyFinalNudge": 3,
+    "loopBreaker": true
+  },
+  "skill": false,
+  "prompt_version": "v3",
+  "prompt_file": "prompts/ablation/v4c-completion-facts-only.md",
+  "prompt_mode": "replace",
+  "thinking": "high",
+  "versions": {
+    "pi": "1.0.2",
+    "omlx": "0.6.4",
+    "model_settings": {
+      "max_tokens": 16384,
+      "thinking_budget_tokens": 4096,
+      "presence_penalty": 0.5,
+      "max_tool_result_tokens": 4000
+    }
+  },
+  "sentence": "make the failing test pass",
+  "started": 1791516440.7899709,
+  "wall_seconds_untrusted": 49.2,
+  "deadline_hit": false,
+  "stop_reason": "stop",
+  "final_text_chars": 187,
+  "thinking_reentries": 0,
+  "final_text_is": "worker",
+  "parent": null,
+  "baseline_lines": {
+    "pyproject.toml": 11,
+    "export.py": 5,
+    "totals.py": 4,
+    ".gitignore": 4,
+    "uv.lock": 79,
+    "test_export.py": 19,
+    "render.py": 2
+  },
+  "check": {
+    "passed": true,
+    "tests_unchanged": true,
+    "details": {
+      "source_files_changed": 3
+    }
+  },
+  "score": {
+    "requests": 16,
+    "largest_prompt_chars": 30728,
+    "tool_calls_by_name": {
+      "ls": 1,
+      "read": 7,
+      "bash": 4,
+      "edit": 3
+    },
+    "tool_errors": 3,
+    "edit_anchor_failures": 0,
+    "noop_edits": 0,
+    "write_existing": 0,
+    "bash_file_mutations": 0,
+    "max_identical_streak": 1,
+    "write_shrink": 0,
+    "nudges": 0,
+    "max_identical_in_window": 4,
+    "loop_breaker_would_block": 0,
+    "effective_params": {
+      "temperature": 0,
+      "top_p": 1,
+      "top_k": 0,
+      "min_p": 0,
+      "seed": 42,
+      "max_tokens": 16384,
+      "presence_penalty": 0.5
+    }
+  },
+  "diff_stat": " export.py | 14 ++++++++++++--\n render.py |  9 +++++++--\n totals.py | 10 +++++++++-\n 3 files changed, 28 insertions(+), 5 deletions(-)\n",
+  "files_created": [],
+  "workspace": "/var/folders/m4/jc_jynrj6z10mk0t80pkj8l80000gn/T/ladder-w1rqt_z6/rung4"
+}

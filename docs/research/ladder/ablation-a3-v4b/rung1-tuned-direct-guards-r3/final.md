@@ -1,0 +1,1 @@
+Fixed calculator.js to multiply priceCents by quantity in the totalCents function. The tests now pass.

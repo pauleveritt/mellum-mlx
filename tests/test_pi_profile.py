@@ -35,7 +35,7 @@ def test_mirror_skips_sessions_and_writes_nothing_to_source(tmp_path):
 def test_ladder_agent_file_appends_recorder_to_guards(tmp_path):
     ws = tmp_path / "ws"
     ws.mkdir()
-    prepare_pi_workspace(ws, Path("/abs/record-pi.js"), skill=False)
+    prepare_pi_workspace(ws, Path("/abs/record-pi.js"))
     text = (ws / ".pi" / "agents" / "mellum-worker.md").read_text()
     assert (
         "subagentOnlyExtensions: ./.pi/extensions/mellum-guards.ts, /abs/record-pi.js\n"
@@ -44,16 +44,6 @@ def test_ladder_agent_file_appends_recorder_to_guards(tmp_path):
     assert (ws / ".pi" / "extensions" / "mellum-guards.ts").exists()
     committed = (ROOT / ".pi" / "agents" / "mellum-worker.md").read_text()
     assert "record-pi" not in committed
-
-
-def test_prepare_pi_workspace_skill_toggle(tmp_path):
-    a, b = tmp_path / "a", tmp_path / "b"
-    a.mkdir()
-    b.mkdir()
-    prepare_pi_workspace(a, Path("/abs/record-pi.js"), skill=False)
-    prepare_pi_workspace(b, Path("/abs/record-pi.js"), skill=True)
-    assert not (a / ".pi" / "skills").exists()
-    assert (b / ".pi" / "skills" / "delegate-to-mellum" / "SKILL.md").exists()
 
 
 def test_direct_agent_dir_carries_the_profiles_request_params(tmp_path):

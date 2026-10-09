@@ -1,0 +1,20 @@
+diff --git a/report.py b/report.py
+index f7ed5a5..be6ff5d 100644
+--- a/report.py
++++ b/report.py
+@@ -1,5 +1,5 @@
+-from rows import fetch_rows
++from rows import load_rows
+ 
+ 
+ def report(source):
+-    return "\n".join(" ".join(r) for r in fetch_rows(source))
++    return "\n".join(" ".join(r) for r in load_rows(source))
+diff --git a/rows.py b/rows.py
+index 59212d1..1d45234 100644
+--- a/rows.py
++++ b/rows.py
+@@ -1,2 +1,2 @@
+-def fetch_rows(source):
++def load_rows(source):
+     return [tuple(line.split("|")) for line in source.splitlines() if line]

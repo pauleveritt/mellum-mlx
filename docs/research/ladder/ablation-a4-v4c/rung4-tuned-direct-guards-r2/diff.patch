@@ -1,0 +1,54 @@
+diff --git a/export.py b/export.py
+index 5904d9e..3c2f72d 100644
+--- a/export.py
++++ b/export.py
+@@ -1,5 +1,15 @@
+ from render import render_rows
++from totals import column_totals
+ 
+ 
+-def export_csv(rows):
+-    return "\n".join(render_rows(rows))
++def export_csv(rows, totals=False):
++    csv_rows = render_rows(rows)
++    if totals:
++        # Compute total row
++        totals_row = column_totals(rows)
++        # Format the total row: start with "TOTAL", then the totals
++        # totals_row may contain strings or numbers; convert to strings
++        total_row = ["TOTAL"] + [str(t) for t in totals_row]
++        total_csv = ",".join(total_row)
++        csv_rows.append(total_csv)
++    return "\n".join(csv_rows)
+diff --git a/render.py b/render.py
+index f17a074..3505cc5 100644
+--- a/render.py
++++ b/render.py
+@@ -1,2 +1,7 @@
+-def render_rows(rows):
+-    return [",".join(str(v) for v in r) for r in rows]
++def render_rows(rows, mark_last=False):
++    rendered = [",".join(str(v) for v in r) for r in rows]
++    if mark_last:
++        # Modify the last row to prepend 'TOTAL'
++        last = rendered[-1]
++        rendered[-1] = "TOTAL," + last
++    return rendered
+diff --git a/totals.py b/totals.py
+index 54cd29d..5669ce0 100644
+--- a/totals.py
++++ b/totals.py
+@@ -1,4 +1,12 @@
+ def column_totals(rows):
+     if not rows:
+         return []
+-    return [sum(r[i] for r in rows) for i in range(len(rows[0]))]
++    result = []
++    for i in range(len(rows[0])):
++        column = [r[i] for r in rows]
++        # Check if all values in the column are numbers (int or float)
++        if all(isinstance(v, (int, float)) for v in column):
++            result.append(sum(column))
++        else:
++            result.append("")
++    return result

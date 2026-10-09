@@ -1,0 +1,1 @@
+All tests pass now. The code has been updated to handle mixed data types in column totals, add mark_last functionality to render_rows, and append a total row when requested in export_csv.

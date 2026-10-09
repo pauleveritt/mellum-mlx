@@ -1,0 +1,1 @@
+The issue has been resolved. The export now includes the totals row when requested, and all tests pass.

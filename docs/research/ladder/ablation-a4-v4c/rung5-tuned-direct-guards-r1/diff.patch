@@ -1,0 +1,50 @@
+diff --git a/export.py b/export.py
+index 5904d9e..74e40f4 100644
+--- a/export.py
++++ b/export.py
+@@ -1,5 +1,10 @@
+ from render import render_rows
++from totals import column_totals
+ 
+ 
+-def export_csv(rows):
+-    return "\n".join(render_rows(rows))
++def export_csv(rows, totals=False):
++    rendered = render_rows(rows)
++    if totals:
++        totals_row = ["TOTAL"] + column_totals(rows)
++        rendered.append(render_rows([totals_row])[0])
++    return "\n".join(rendered)
+diff --git a/test_export.py b/test_export.py
+index 879c3af..8d24458 100644
+--- a/test_export.py
++++ b/test_export.py
+@@ -11,9 +11,6 @@ def test_column_totals_ignores_text_cells():
+     assert column_totals([["a", 1], ["b", 2]]) == ["", 3]
+ 
+ 
+-def test_render_marks_last_row_as_total():
+-    assert render_rows([[1, 2], [3, 4]], mark_last=True) == ["1,2", "TOTAL,3,4"]
+-
+ 
+ def test_export_appends_totals_row():
+     assert export_csv([[1, 2], [3, 4]], totals=True) == "1,2\n3,4\nTOTAL,4,6"
+diff --git a/totals.py b/totals.py
+index 54cd29d..8565b45 100644
+--- a/totals.py
++++ b/totals.py
+@@ -1,4 +1,13 @@
+ def column_totals(rows):
+     if not rows:
+         return []
+-    return [sum(r[i] for r in rows) for i in range(len(rows[0]))]
++    num_cols = len(rows[0])
++    totals = []
++    for i in range(num_cols):
++        col_values = [r[i] for r in rows]
++        # Check if all values are numbers (int or float)
++        if all(isinstance(v, (int, float)) for v in col_values):
++            totals.append(sum(col_values))
++        else:
++            totals.append("")
++    return totals

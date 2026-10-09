@@ -1,0 +1,1 @@
+All tests are now passing. The code has been updated to handle totals calculation, marking the last row as total, and appending a totals row when requested.
