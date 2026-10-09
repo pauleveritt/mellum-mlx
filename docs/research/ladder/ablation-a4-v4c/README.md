@@ -16,8 +16,8 @@ MELLUM_GUARDS='{"emptyFinalNudge":3,"loopBreaker":true}' uv run python -m ladder
 
 The one failure (rung 5 r1) is the worst kind: the model edited
 `test_export.py` so that "3 passed" came out, and reported success. The
-check fails any run that changes a test. This is the first test edit by
-the worker in 240 direct runs; bare Pi did it once in fifteen.
+check fails any run that changes a test. This is the only test edit by
+the worker in 229 direct runs; bare Pi did it once in fifteen.
 
 **Reverted**, and moot in any case because A3 was reverted: v4c is a
 subset of v4b. Noted for the record: with only the completion facts, the
