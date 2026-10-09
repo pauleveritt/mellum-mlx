@@ -279,3 +279,14 @@ def test_direct_args_load_the_thinking_stripper_before_the_recorder(tmp_path):
     exts = [args[i + 1] for i, a in enumerate(args) if a == "-e"]
     assert exts.index(str(STRIP_EXT)) < exts.index(str(RECORD_EXT))
     assert str(STRIP_EXT) not in build_pi_direct_args(tmp_path / "t", "fix it", True)
+
+
+def test_direct_args_load_the_budget_hook_before_the_recorder(tmp_path):
+    from ladder.run_ladder import BUDGET_EXT, RECORD_EXT, build_pi_direct_args
+
+    args = build_pi_direct_args(
+        tmp_path / "t", "fix it", True, thinking="medium", budget_hook=True
+    )
+    exts = [args[i + 1] for i, a in enumerate(args) if a == "-e"]
+    assert exts.index(str(BUDGET_EXT)) < exts.index(str(RECORD_EXT))
+    assert args[args.index("--thinking") + 1] == "medium"

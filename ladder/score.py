@@ -112,6 +112,7 @@ def score(
                         "seed",
                         "max_tokens",
                         "presence_penalty",
+                        "thinking_budget",
                     )
                     if k in payload
                 }

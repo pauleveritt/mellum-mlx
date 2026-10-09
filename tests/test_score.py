@@ -210,3 +210,11 @@ def test_loop_breaker_replay_forgets_repeats_after_a_mutating_call():
     assert (
         score([read] * 5 + [edit] + [read] * 6, set(), {}).loop_breaker_would_block == 1
     )
+
+
+def test_effective_params_record_a_request_level_thinking_budget():
+    req = {
+        "type": "provider_request",
+        "payload": {"temperature": 0, "thinking_budget": 2048, "messages": []},
+    }
+    assert score([req], set(), {}).effective_params["thinking_budget"] == 2048
