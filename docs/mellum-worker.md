@@ -221,6 +221,27 @@ prompt instead of 17k, and the wall time is the same (prefill is cached;
 the time is generation). What you give up against delegation is the
 parent's independent test run afterwards; run the tests yourself.
 
+Where the cost goes, measured per task at the same sampling
+([A10](research/ladder/ablation-a10-delegated-v5/README.md) vs [A14](research/ladder/ablation-a14-mellum-mode/README.md)):
+
+| per task | Mellum Worker | Mellum Mode |
+| --- | --- | --- |
+| passes | 15/15 | 14/15 |
+| wall, mean (by rung) | 54 s (30 / 38 / 24 / 77 / 99) | 70 s (24 / 76 / 31 / 99 / 122) |
+| Mellum requests per run | 11.1 | 13.1 |
+| your main model per run | 6.5 turns, about 3k output and 120k mostly cached input tokens | none |
+| left in your session | the parent's reads and the child's short report | all of Mellum's tool results |
+
+The Worker is not cheaper; its cost moves to your main model. The parent
+reads the files, runs the tests once, writes the brief, and runs the tests
+again on the result. That scoping is why the child needs 11 requests
+where the Mode's model, starting from your sentence, needs 13 and thinks
+longer per turn, and why the Worker is slower on a one-line fix and
+faster on anything touching several files. Choose by what you are
+protecting: the hosted model's tokens (Mode spends none), wall time on
+multi-file tasks (Worker), or an uncluttered main conversation (Worker,
+because the parent summarises rather than inherits).
+
 Cautions. The ladder measured the headless path; the interactive path
 (`on`, a second `on`, a task, `off`, a parent turn, a second `off`, the
 one-shot form) is exercised by `uv run python -m ladder.probe_mode_rpc`
