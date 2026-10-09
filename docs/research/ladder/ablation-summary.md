@@ -25,6 +25,7 @@ scorer column that was zero becomes non-zero.
 | [A14](ablation-a14-mellum-mode/README.md) | (Mellum Mode: the worker inside the main session, operator profile) | 14/15 | ships | 10/15 → 14/15 in the same profile at the same sampling; prefill −78%; wall unchanged (prefill is cached); no parent round trip |
 | [A15](ablation-a15-chunked-brief/README.md) | (Markdown brief, one prompt per step in one session) | 15/15 | no | 2.4× the time, 2.5× the output tokens of the sentence; bounded turns did not reduce empty finals |
 | [A16](ablation-a16-brief-one-prompt/README.md) | (the same brief as one prompt) | 11/15 | no | the model stops at the brief's first "reply" step; a one-prompt brief must not contain intermediate replies |
+| [A17](ablation-a17-mode-v012/README.md) | (Mellum Mode as shipped in mellum-worker v0.1.2, same launch as A14) | 14/15 | ships | no regression: 12.9 requests vs 13.1, wall 44 s vs 70 s (server state, not code); miss moved from rung 4 to rung 5 |
 
 ## The worker, before and after
 

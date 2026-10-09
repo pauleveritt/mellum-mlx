@@ -1,0 +1,1 @@
+The export functionality has been updated to include a totals row when requested. The tests now pass successfully.

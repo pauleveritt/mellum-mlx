@@ -1,0 +1,1 @@
+Cart total now correctly includes quantity.
