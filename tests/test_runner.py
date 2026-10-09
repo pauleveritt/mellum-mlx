@@ -101,3 +101,36 @@ def test_signal_handlers_raise_system_exit_so_finally_blocks_run():
 
         with pytest.raises(SystemExit):
             handler(sig, None)
+
+
+def test_parse_parent_json_extracts_the_brief():
+    from ladder.run_ladder import parse_parent_json
+
+    lines = [
+        '{"type":"message_end","message":{"role":"assistant","stopReason":"toolUse","content":[{"type":"toolCall","name":"subagent","arguments":{"agent":"mellum-worker","task":"Fix totalCents in calculator.js; run node --test"}}]}}',
+        '{"type":"message_end","message":{"role":"assistant","stopReason":"stop","content":[{"type":"text","text":"Done: 3/3 tests pass."}]}}',
+    ]
+    parent = parse_parent_json("\n".join(lines))
+    assert parent["delegated"] is True
+    assert parent["brief"] == "Fix totalCents in calculator.js; run node --test"
+    assert parent["parent_final_chars"] == len("Done: 3/3 tests pass.")
+    assert parent["subagent_calls"] == 1
+
+
+def test_parse_parent_json_reports_no_delegation():
+    from ladder.run_ladder import parse_parent_json
+
+    line = (
+        '{"type":"message_end","message":{"role":"assistant","stopReason":"stop","content":'
+        '[{"type":"toolCall","name":"edit","arguments":{}},{"type":"text","text":"I fixed it myself."}]}}'
+    )
+    parent = parse_parent_json(line)
+    assert parent["delegated"] is False and parent["brief"] == "" and parent["subagent_calls"] == 0
+
+
+def test_delegated_args_address_the_worker_by_name():
+    from ladder.run_ladder import build_pi_delegated_args
+
+    args = build_pi_delegated_args("fix it")
+    assert args[:2] == ["pi", "-p"] and "--no-session" in args and "--no-extensions" not in args
+    assert args[-1] == "Use mellum-worker to do this: fix it"

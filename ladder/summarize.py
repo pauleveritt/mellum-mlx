@@ -56,6 +56,9 @@ def summarize(directory: Path) -> dict:
             nonzero["nudges"] = nonzero.get("nudges", 0) + 1
         if record.get("thinking_reentries"):
             nonzero["thinking_reentries"] = nonzero.get("thinking_reentries", 0) + 1
+        parent = record.get("parent")
+        if isinstance(parent, dict) and parent.get("delegated") is False:
+            nonzero["not_delegated"] = nonzero.get("not_delegated", 0) + 1
         if "stop_reason" in record and record["stop_reason"] != "stop":
             nonzero["stop_reason!=stop"] = nonzero.get("stop_reason!=stop", 0) + 1
     return {

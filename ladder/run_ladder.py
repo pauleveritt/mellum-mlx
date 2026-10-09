@@ -21,6 +21,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 from .omlx_profiles import PROFILES, AdminClient, profile
+from .pi_profile import mirror_agent_dir, prepare_pi_workspace
 from .rungs import FIXTURES, RUNGS, Rung, copy_fixture
 from .score import score
 
@@ -32,11 +33,12 @@ MODEL = "omlx/Mellum2.1-12B-A2.5B-Thinking-6bit"
 MODEL_ID = MODEL.split("/", 1)[1]
 TOOLS = "read,grep,find,ls,bash,edit,write"
 PROMPT_VERSION = "v3"
+PARENT_PROMPT = "Use mellum-worker to do this: {sentence}"
 
 HEADER = (
     "| rung | profile | mode | rep | result | tests_unchanged | requests | tool_errors | anchor_fail | "
-    "noop_edit | write_existing | write_shrink | bash_mut | max_streak | largest_prompt_chars | nudges | stop | final_chars | reentries | deadline | wall_s (untrusted) |\n"
-    "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n"
+    "noop_edit | write_existing | write_shrink | bash_mut | max_streak | largest_prompt_chars | nudges | stop | final_chars | reentries | deadline | wall_s (untrusted) | deleg | brief_chars |\n"
+    "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n"
 )
 
 
@@ -68,11 +70,65 @@ def build_pi_direct_args(trace: Path, sentence: str, guards: bool = False) -> li
     return [*args, sentence]
 
 
-def child_env(parent: dict, trace: str) -> dict:
-    """The worker's environment: the parent's, minus the repo venv that uv exports."""
+def child_env(parent: dict, trace: str, agent_dir: Path | None = None) -> dict:
+    """The worker's environment: the parent's, minus the repo venv that uv exports.
+
+    Direct mode runs offline. Delegated mode points Pi at the mirrored agent
+    directory and keeps the network, which the hosted parent model needs.
+    """
     env = {k: v for k, v in parent.items() if k != "VIRTUAL_ENV"}
-    env.update({"MELLUM_TRACE_FILE": str(trace), "PI_OFFLINE": "1"})
+    env["MELLUM_TRACE_FILE"] = str(trace)
+    if agent_dir is None:
+        env["PI_OFFLINE"] = "1"
+    else:
+        env["PI_CODING_AGENT_DIR"] = str(agent_dir)
+        env.pop("PI_OFFLINE", None)
     return env
+
+
+def build_pi_delegated_args(sentence: str) -> list[str]:
+    """The parent: its normal profile (model, Superpowers, pi-subagents), addressed to the worker."""
+    return [
+        "pi",
+        "-p",
+        "--mode",
+        "json",
+        "--no-session",
+        "--thinking",
+        "high",
+        PARENT_PROMPT.format(sentence=sentence),
+    ]
+
+
+def parse_parent_json(stdout: str) -> dict:
+    """What the parent did: whether it launched the worker, the brief it wrote, its final text."""
+    brief, final, messages, calls = "", "", 0, 0
+    for line in stdout.splitlines():
+        if not line.startswith("{"):
+            continue
+        try:
+            event = json.loads(line)
+        except ValueError:
+            continue
+        message = event.get("message") or {}
+        if event.get("type") != "message_end" or message.get("role") != "assistant":
+            continue
+        messages += 1
+        blocks = [b for b in (message.get("content") or []) if isinstance(b, dict)]
+        final = "".join(b.get("text", "") for b in blocks if b.get("type") == "text")
+        for block in blocks:
+            if block.get("type") == "toolCall" and block.get("name") == "subagent":
+                arguments = block.get("arguments") or {}
+                if arguments.get("agent") == "mellum-worker" and arguments.get("task"):
+                    calls += 1
+                    brief = brief or str(arguments["task"])
+    return {
+        "delegated": calls > 0,
+        "brief": brief,
+        "parent_final_chars": len(final.strip()),
+        "parent_messages": messages,
+        "subagent_calls": calls,
+    }
 
 
 def parse_pi_json(stdout: str, with_reentries: bool = False):
@@ -155,13 +211,22 @@ def run_once(
     deadline: int,
     versions: dict,
     guards: bool,
+    skill: bool = False,
 ) -> dict:
     scratch = Path(tempfile.mkdtemp(prefix="ladder-"))
     ws = prepare_workspace(rung, scratch)
     paths, lines = baseline_index(ws)
     trace = scratch / "trace.jsonl"
-    env = child_env(dict(os.environ), str(trace))
-    args = build_pi_direct_args(trace, rung.sentence, guards)
+    if mode == "delegated":
+        prepare_pi_workspace(ws, RECORD_EXT, skill)
+        agent_dir = mirror_agent_dir(
+            Path.home() / ".pi" / "agent", scratch / "pi-agent", [ws]
+        )
+        env = child_env(dict(os.environ), str(trace), agent_dir)
+        args = build_pi_delegated_args(rung.sentence)
+    else:
+        env = child_env(dict(os.environ), str(trace))
+        args = build_pi_direct_args(trace, rung.sentence, guards)
     started = time.time()
     deadline_hit = False
     stdout = ""
@@ -198,6 +263,7 @@ def run_once(
         "mode": mode,
         "harness": "pi",
         "guards": guards,
+        "skill": skill,
         "prompt_version": PROMPT_VERSION,
         "versions": versions,
         "sentence": rung.sentence,
@@ -207,6 +273,8 @@ def run_once(
         "stop_reason": stop_reason,
         "final_text_chars": len(final_text),
         "thinking_reentries": thinking_reentries,
+        "final_text_is": "parent" if mode == "delegated" else "worker",
+        "parent": parse_parent_json(stdout) if mode == "delegated" else None,
         "baseline_lines": lines,
         "check": asdict(rung.check(ws, FIXTURES / rung.fixture)),
         "score": score(events, paths, lines).as_row(),
@@ -220,9 +288,8 @@ def run_once(
         ],
         "workspace": str(ws),
     }
-    run_dir = (
-        out / f"rung{rung.number}-{prof}-{mode}{'-guards' if guards else ''}-r{repeat}"
-    )
+    variant = f"{'-guards' if guards else ''}{'-skill' if skill else ''}"
+    run_dir = out / f"rung{rung.number}-{prof}-{mode}{variant}-r{repeat}"
     run_dir.mkdir(parents=True, exist_ok=True)
     (run_dir / "run.json").write_text(json.dumps(record, indent=2, default=str))
     if trace.exists():
@@ -230,18 +297,23 @@ def run_once(
     (run_dir / "stdout.txt").write_text(stdout)
     (run_dir / "final.md").write_text(final_text)
     (run_dir / "diff.patch").write_text(git(ws, "diff", "--cached"))
+    if record["parent"]:
+        (run_dir / "brief.md").write_text(record["parent"]["brief"])
     return record
 
 
 def table_row(record: dict) -> str:
     s, c = record["score"], record["check"]
     result = "pass" if c["passed"] else "FAIL"
+    parent = record.get("parent") or {}
+    deleg = parent.get("delegated", "") if parent else ""
+    brief_chars = len(parent.get("brief", "")) if parent else ""
     return (
         f"| {record['rung']} | {record['profile']}{'+guards' if record['guards'] else ''} | {record['mode']} | "
         f"{record['repeat']} | {result} | {c['tests_unchanged']} | {s['requests']} | {s['tool_errors']} | "
         f"{s['edit_anchor_failures']} | {s['noop_edits']} | {s['write_existing']} | {s['write_shrink']} | {s['bash_file_mutations']} | "
         f"{s['max_identical_streak']} | {s['largest_prompt_chars']} | {s.get('nudges', 0)} | {record['stop_reason']} | {record['final_text_chars']} | {record.get('thinking_reentries', '')} | {record['deadline_hit']} | "
-        f"{record['wall_seconds_untrusted']} |\n"
+        f"{record['wall_seconds_untrusted']} | {deleg} | {brief_chars} |\n"
     )
 
 
@@ -267,12 +339,17 @@ def tool_version(cmd: list[str]) -> str:
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--harness", choices=["pi"], default="pi")
-    parser.add_argument("--mode", choices=["direct"], default="direct")
+    parser.add_argument("--mode", choices=["direct", "delegated"], default="direct")
     parser.add_argument("--profile", choices=sorted(PROFILES), required=True)
     parser.add_argument("--rung", type=int, action="append", required=True)
     parser.add_argument("--repeat", type=int, default=1)
     parser.add_argument("--deadline", type=int, default=600)
     parser.add_argument("--guards", action="store_true")
+    parser.add_argument(
+        "--skill",
+        action="store_true",
+        help="delegated mode: give the parent the delegate-to-mellum skill",
+    )
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--omlx", default="http://127.0.0.1:8001")
     args = parser.parse_args(argv)
@@ -309,6 +386,7 @@ def main(argv: list[str] | None = None) -> None:
                     args.deadline,
                     versions,
                     args.guards,
+                    args.skill,
                 )
                 row = table_row(record)
                 with table.open("a") as stream:
