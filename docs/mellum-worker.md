@@ -46,6 +46,7 @@ every request from its `models.json` entry. So:
 | thinking budget | server profile only | off — a 4,096-per-block budget was never triggered in 15 runs; the request cap is what binds |
 | `max_tool_result_tokens` | server profile only | off — the largest tool result in 30 runs was 2,639 characters |
 | `forced_ct_kwargs: ["enable_thinking"]` | server profile only | on — a client cannot switch thinking off |
+| thinking level (`thinking:` in the agent file, `--thinking`) | nowhere | inert: Pi's level does not reach an `openai-completions` provider; two runs at "high" and "medium" sent byte-identical requests ([ablation A5](research/ladder/ablation-a5-thinking-medium/README.md)) |
 
 Verify with one request through the proxy or Pi's `before_provider_request`
 hook (`ladder/record-pi.js`) that the values you expect are the values sent;
