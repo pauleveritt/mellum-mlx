@@ -125,12 +125,32 @@ def test_parse_parent_json_reports_no_delegation():
         '[{"type":"toolCall","name":"edit","arguments":{}},{"type":"text","text":"I fixed it myself."}]}}'
     )
     parent = parse_parent_json(line)
-    assert parent["delegated"] is False and parent["brief"] == "" and parent["subagent_calls"] == 0
+    assert (
+        parent["delegated"] is False
+        and parent["brief"] == ""
+        and parent["subagent_calls"] == 0
+    )
 
 
 def test_delegated_args_address_the_worker_by_name():
     from ladder.run_ladder import build_pi_delegated_args
 
     args = build_pi_delegated_args("fix it")
-    assert args[:2] == ["pi", "-p"] and "--no-session" in args and "--no-extensions" not in args
+    assert (
+        args[:2] == ["pi", "-p"]
+        and "--no-session" in args
+        and "--no-extensions" not in args
+    )
     assert args[-1] == "Use mellum-worker to do this: fix it"
+
+
+def test_direct_env_is_offline_and_uses_the_profile_agent_dir():
+    from ladder.run_ladder import child_env
+
+    env = child_env(
+        {"PATH": "/bin"},
+        "/tmp/t.jsonl",
+        agent_dir=__import__("pathlib").Path("/tmp/agent"),
+        offline=True,
+    )
+    assert env["PI_OFFLINE"] == "1" and env["PI_CODING_AGENT_DIR"] == "/tmp/agent"

@@ -43,6 +43,29 @@ PROFILES: dict[str, dict] = {
 # Variant to isolate the presence penalty: everything in tuned except the penalty.
 PROFILES["tuned-nopenalty"] = {**PROFILES["tuned"], "presence_penalty": 0.0}
 
+# Request-level values. oMLX gives a request's sampling and cap values precedence
+# over the model profile, so the runner must send these itself (through a
+# temporary Pi models.json) for a profile to be in effect. Greedy by design:
+# the ladder measures settings, not sampling variance. These keys are never PUT
+# to the server.
+_GREEDY = {"temperature": 0, "top_p": 1, "top_k": 0, "min_p": 0, "seed": 42}
+REQUEST_PARAMS: dict[str, dict] = {
+    "baseline": {**_GREEDY, "max_tokens": 4096, "presence_penalty": 0},
+    "tuned": {**_GREEDY, "max_tokens": 16384, "presence_penalty": 0.5},
+    "tuned-nopenalty": {**_GREEDY, "max_tokens": 16384, "presence_penalty": 0},
+}
+
+
+def check_effective_params(sent: dict, name: str) -> None:
+    """Raise ProfileMismatch when the first request's values differ from the profile's request block."""
+    wanted = REQUEST_PARAMS[name]
+    bad = {k: (v, sent.get(k)) for k, v in wanted.items() if k in sent and sent[k] != v}
+    missing = [k for k in wanted if k not in sent]
+    if bad or missing:
+        raise ProfileMismatch(
+            f"{name}: request carried {bad or ''} missing {missing or ''}"
+        )
+
 
 class ProfileMismatch(RuntimeError):
     """The server accepted a settings update but the live values differ."""

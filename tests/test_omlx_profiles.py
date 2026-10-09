@@ -101,3 +101,28 @@ def test_restore_failure_chains_the_original_error(tmp_path):
         chain.append(type(error))
         error = error.__cause__ or error.__context__
     assert RuntimeError in chain, chain
+
+
+def test_request_params_exist_for_every_profile_and_are_not_server_keys():
+    from ladder.omlx_profiles import REQUEST_PARAMS
+
+    for name in PROFILES:
+        assert name in REQUEST_PARAMS, name
+        assert {"temperature", "max_tokens"} <= REQUEST_PARAMS[name].keys()
+        for key in set(REQUEST_PARAMS[name]) & set(PROFILES[name]):
+            assert REQUEST_PARAMS[name][key] == PROFILES[name][key], (
+                f"{name}.{key}: request and server defaults disagree"
+            )
+    assert REQUEST_PARAMS["baseline"]["max_tokens"] == 4096
+    assert REQUEST_PARAMS["tuned"]["presence_penalty"] == 0.5
+    assert REQUEST_PARAMS["tuned-nopenalty"]["presence_penalty"] == 0
+
+
+def test_check_effective_params_raises_on_a_forwarded_key_mismatch():
+    from ladder.omlx_profiles import REQUEST_PARAMS, check_effective_params
+
+    sent = dict(REQUEST_PARAMS["tuned"])
+    check_effective_params(sent, "tuned")
+    sent["presence_penalty"] = 0
+    with pytest.raises(ProfileMismatch):
+        check_effective_params(sent, "tuned")

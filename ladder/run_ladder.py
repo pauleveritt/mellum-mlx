@@ -20,8 +20,8 @@ import time
 from dataclasses import asdict
 from pathlib import Path
 
-from .omlx_profiles import PROFILES, AdminClient, profile
-from .pi_profile import mirror_agent_dir, prepare_pi_workspace
+from .omlx_profiles import PROFILES, AdminClient, check_effective_params, profile
+from .pi_profile import direct_agent_dir, mirror_agent_dir, prepare_pi_workspace
 from .rungs import FIXTURES, RUNGS, Rung, copy_fixture
 from .score import score
 
@@ -70,18 +70,24 @@ def build_pi_direct_args(trace: Path, sentence: str, guards: bool = False) -> li
     return [*args, sentence]
 
 
-def child_env(parent: dict, trace: str, agent_dir: Path | None = None) -> dict:
+def child_env(
+    parent: dict, trace: str, agent_dir: Path | None = None, offline: bool | None = None
+) -> dict:
     """The worker's environment: the parent's, minus the repo venv that uv exports.
 
-    Direct mode runs offline. Delegated mode points Pi at the mirrored agent
-    directory and keeps the network, which the hosted parent model needs.
+    Direct mode runs offline against the ladder's own agent directory.
+    Delegated mode points Pi at the mirrored operator profile and keeps the
+    network, which the hosted parent model needs.
     """
     env = {k: v for k, v in parent.items() if k != "VIRTUAL_ENV"}
     env["MELLUM_TRACE_FILE"] = str(trace)
-    if agent_dir is None:
+    if agent_dir is not None:
+        env["PI_CODING_AGENT_DIR"] = str(agent_dir)
+    if offline is None:
+        offline = agent_dir is None
+    if offline:
         env["PI_OFFLINE"] = "1"
     else:
-        env["PI_CODING_AGENT_DIR"] = str(agent_dir)
         env.pop("PI_OFFLINE", None)
     return env
 
@@ -225,7 +231,8 @@ def run_once(
         env = child_env(dict(os.environ), str(trace), agent_dir)
         args = build_pi_delegated_args(rung.sentence)
     else:
-        env = child_env(dict(os.environ), str(trace))
+        agent_dir = direct_agent_dir(scratch / "pi-agent", prof)
+        env = child_env(dict(os.environ), str(trace), agent_dir, offline=True)
         args = build_pi_direct_args(trace, rung.sentence, guards)
     started = time.time()
     deadline_hit = False
@@ -391,6 +398,10 @@ def main(argv: list[str] | None = None) -> None:
                 row = table_row(record)
                 with table.open("a") as stream:
                     stream.write(row)
+                if args.mode == "direct" and record["score"]["effective_params"]:
+                    check_effective_params(
+                        record["score"]["effective_params"], args.profile
+                    )
                 print(row, end="", flush=True)
 
 

@@ -14,7 +14,10 @@ import os
 import shutil
 from pathlib import Path
 
+from .omlx_profiles import REQUEST_PARAMS
+
 ROOT = Path(__file__).resolve().parent.parent
+MODEL_ID = "Mellum2.1-12B-A2.5B-Thinking-6bit"
 COPIED_FILES = ("settings.json", "models.json", "auth.json", "AGENTS.md")
 LINKED_DIRS = ("git", "npm")
 
@@ -63,3 +66,60 @@ def prepare_pi_workspace(ws: Path, record_ext: Path, skill: bool) -> Path:
             pi / "skills" / "delegate-to-mellum",
         )
     return pi
+
+
+def direct_agent_dir(
+    dest: Path, profile: str, base_url: str = "http://127.0.0.1:8001/v1"
+) -> Path:
+    """A minimal Pi agent directory whose omlx model entry sends the profile's request values.
+
+    Direct mode uses this instead of the operator's profile so that temperature,
+    caps, and penalties are the ladder's, not Pi's defaults.
+    """
+    request = dict(REQUEST_PARAMS[profile])
+    max_tokens = request.pop("max_tokens")
+    entry = {
+        "id": MODEL_ID,
+        "name": "Mellum ladder",
+        "reasoning": True,
+        "input": ["text"],
+        "contextWindow": 56000,
+        "maxTokens": max_tokens,
+        "cost": {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0},
+        "compat": {
+            "supportsDeveloperRole": False,
+            "supportsReasoningEffort": False,
+            "maxTokensField": "max_tokens",
+            "thinkingFormat": "qwen-chat-template",
+        },
+        "samplingParams": request,
+    }
+    dest.mkdir(parents=True, exist_ok=True)
+    (dest / "models.json").write_text(
+        json.dumps(
+            {
+                "providers": {
+                    "omlx": {
+                        "baseUrl": base_url,
+                        "api": "openai-completions",
+                        "apiKey": "not-needed",
+                        "models": [entry],
+                    }
+                }
+            },
+            indent=2,
+        )
+    )
+    (dest / "settings.json").write_text(
+        json.dumps(
+            {
+                "defaultProvider": "omlx",
+                "defaultModel": MODEL_ID,
+                "defaultThinkingLevel": "high",
+                "compaction": {"enabled": False},
+                "quietStartup": True,
+            },
+            indent=2,
+        )
+    )
+    return dest
