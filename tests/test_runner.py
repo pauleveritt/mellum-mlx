@@ -290,3 +290,30 @@ def test_direct_args_load_the_budget_hook_before_the_recorder(tmp_path):
     exts = [args[i + 1] for i, a in enumerate(args) if a == "-e"]
     assert exts.index(str(BUDGET_EXT)) < exts.index(str(RECORD_EXT))
     assert args[args.index("--thinking") + 1] == "medium"
+
+
+def test_mode_args_run_mellum_inside_the_operator_profile_with_the_mode_extension():
+    """Mellum mode: the operator's full profile (extensions, skills), plus the mode, guards, recorder."""
+    from ladder.run_ladder import (
+        GUARDS_EXT,
+        MODE_EXT,
+        MODEL,
+        RECORD_EXT,
+        build_pi_mode_args,
+    )
+
+    args = build_pi_mode_args("fix it")
+    assert "--no-extensions" not in args and "--no-skills" not in args
+    assert args[args.index("--model") + 1] == MODEL
+    exts = [args[i + 1] for i, a in enumerate(args) if a == "-e"]
+    assert exts.index(str(MODE_EXT)) < exts.index(str(RECORD_EXT))
+    assert str(GUARDS_EXT) in exts
+    assert args[-1] == "fix it"
+
+
+def test_mode_env_activates_the_mode_headlessly():
+    from ladder.run_ladder import child_env
+
+    env = child_env({}, "/t", None, offline=False, mode=True)
+    assert env["MELLUM_MODE"] == "1"
+    assert "MELLUM_MODE" not in child_env({}, "/t", None, offline=False)

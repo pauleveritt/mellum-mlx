@@ -31,6 +31,7 @@ PROMPT_FILE = ROOT / "prompts" / "mellum-worker.md"
 RECORD_EXT = ROOT / "ladder" / "record-pi.js"
 STRIP_EXT = ROOT / "ladder" / "strip-thinking.js"
 BUDGET_EXT = ROOT / "ladder" / "thinking-budget.js"
+MODE_EXT = ROOT / ".pi" / "mellum" / "mellum-mode.ts"
 GUARDS_EXT = ROOT / ".pi" / "mellum" / "mellum-guards.ts"
 MODEL = "omlx/Mellum2.1-12B-A2.5B-Thinking-6bit"
 MODEL_ID = MODEL.split("/", 1)[1]
@@ -99,7 +100,11 @@ def build_pi_direct_args(
 
 
 def child_env(
-    parent: dict, trace: str, agent_dir: Path | None = None, offline: bool | None = None
+    parent: dict,
+    trace: str,
+    agent_dir: Path | None = None,
+    offline: bool | None = None,
+    mode: bool = False,
 ) -> dict:
     """The worker's environment: the parent's, minus the repo venv that uv exports.
 
@@ -109,6 +114,8 @@ def child_env(
     """
     env = {k: v for k, v in parent.items() if k != "VIRTUAL_ENV"}
     env["MELLUM_TRACE_FILE"] = str(trace)
+    if mode:
+        env["MELLUM_MODE"] = "1"
     if agent_dir is not None:
         env["PI_CODING_AGENT_DIR"] = str(agent_dir)
     if offline is None:
@@ -159,6 +166,32 @@ def build_pi_primary_args(sentence: str, plain: bool = False) -> list[str]:
         "high",
         "--model",
         MODEL,
+        "-e",
+        str(RECORD_EXT),
+        sentence,
+    ]
+
+
+def build_pi_mode_args(sentence: str) -> list[str]:
+    """Mellum mode: the operator's own profile with the mode extension forced on.
+
+    Superpowers, pi-subagents and the skills catalog load as they do for the
+    operator; the mode's before_provider_request hook then sends Mellum the
+    worker prompt and only the messages since the mode began. Guards and the
+    recorder load after the mode so the trace shows what was sent.
+    """
+    return [
+        "pi",
+        "-p",
+        "--mode",
+        "json",
+        "--no-session",
+        "--model",
+        MODEL,
+        "-e",
+        str(MODE_EXT),
+        "-e",
+        str(GUARDS_EXT),
         "-e",
         str(RECORD_EXT),
         sentence,
@@ -304,6 +337,14 @@ def run_once(
         )
         env = child_env(dict(os.environ), str(trace), agent_dir, offline=False)
         args = build_pi_primary_args(rung.sentence, plain)
+    elif mode == "mode":
+        agent_dir = mirror_agent_dir(
+            Path.home() / ".pi" / "agent", scratch / "pi-agent", [ws]
+        )
+        env = child_env(
+            dict(os.environ), str(trace), agent_dir, offline=False, mode=True
+        )
+        args = build_pi_mode_args(rung.sentence)
     else:
         agent_dir = direct_agent_dir(scratch / "pi-agent", prof)
         env = child_env(dict(os.environ), str(trace), agent_dir, offline=True)
@@ -445,7 +486,7 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--harness", choices=["pi"], default="pi")
     parser.add_argument(
-        "--mode", choices=["direct", "delegated", "primary"], default="direct"
+        "--mode", choices=["direct", "delegated", "primary", "mode"], default="direct"
     )
     parser.add_argument("--profile", choices=sorted(PROFILES), required=True)
     parser.add_argument("--rung", type=int, action="append", required=True)
