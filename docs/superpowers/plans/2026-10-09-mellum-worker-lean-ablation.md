@@ -65,12 +65,22 @@ Lines whose removal cannot be measured in direct mode. Each is removed if
 pi-subagents' default already gives the same behaviour, and the result is
 confirmed by one 15-run delegated phase:
 
-- `excludeTools: contact_supervisor` — only meaningful if the supervisor tool
-  is offered to a child with `acceptance: level none`.
-- `allowedAgents:` empty — check the default for a child.
-- `defaultContext: fresh` — check the default.
-- `advertise: true` — needed for the parent to see the worker; stays.
+- `excludeTools: contact_supervisor` — removed. The docs say `excludeTools`
+  narrows an explicit `tools` allowlist, and `contact_supervisor` is not in
+  the allowlist. The delegated run checks the child's advertised tool list
+  in its first request (phase 3a showed exactly the seven allowed tools); if
+  `contact_supervisor` appears without the line, it goes back.
+- `allowedAgents:` empty — removed. "An empty list denies every descendant
+  launch. This only narrows an existing nesting grant": the worker has no
+  `subagent` tool and no `allowNestedSubagents`, so there is nothing to narrow.
+- `defaultContext: fresh` — removed. The documented fallback without a global
+  `defaultSubagentContext` is `fresh`, and the operator profile sets none.
+  Cost if wrong: an operator who later sets a global `fork` default gets a
+  forked worker; noted in the README.
+- `advertise: true` — stays; it is how the parent sees the worker.
 - `acceptance:` block — stays; the measured failure mode is recorded.
+- `inheritProjectContext/GlobalContext/Skills: false` — stay; cheap, and they
+  are the recovery report's remedy, not something the ladder measures.
 
 ## Step A7: the parent-side skill
 
