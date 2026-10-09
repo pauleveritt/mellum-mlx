@@ -1,7 +1,15 @@
 [project]
 name = "mellum-mlx"
 version = "0.1.0"
-description = "Add your description here"
+description = "Convert cached Mellum 2.1 checkpoints to quantized MLX models"
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "huggingface-hub>=1.0",
+    "mlx-lm>=0.32.0,<0.33",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]

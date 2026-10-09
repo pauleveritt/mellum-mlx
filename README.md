@@ -49,7 +49,9 @@ a request-level `thinking_budget` is not enforced for this model; stripping
 earlier turns' thinking from context makes runs 60% slower because on this
 cached local server generation, not prefill, is the cost. The
 [OpenCode follow-up](docs/research/mellum-recovery-2026-10-07/opencode-report.md)
-predates the recipe; the OpenCode port is scheduled.
+predates the recipe. The OpenCode port shipped in
+<https://github.com/pauleveritt/mellum-worker> (v0.1.1): the same v5 prompt as
+an OpenCode subagent, smoke-tested but not measured on the ladder.
 
 ### Preserve the hybrid cache
 
