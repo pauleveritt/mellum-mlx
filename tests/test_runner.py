@@ -154,3 +154,13 @@ def test_direct_env_is_offline_and_uses_the_profile_agent_dir():
         offline=True,
     )
     assert env["PI_OFFLINE"] == "1" and env["PI_CODING_AGENT_DIR"] == "/tmp/agent"
+
+
+def test_primary_args_run_mellum_as_the_parent_with_the_recorder():
+    from ladder.run_ladder import MODEL, RECORD_EXT, build_pi_primary_args
+
+    args = build_pi_primary_args("fix it")
+    assert args[:2] == ["pi", "-p"] and "--no-session" in args and "--no-extensions" not in args
+    assert args[args.index("--model") + 1] == MODEL
+    assert args[args.index("-e") + 1] == str(RECORD_EXT)
+    assert args[-1] == "fix it"

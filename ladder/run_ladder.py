@@ -106,6 +106,29 @@ def build_pi_delegated_args(sentence: str) -> list[str]:
     ]
 
 
+def build_pi_primary_args(sentence: str) -> list[str]:
+    """Mellum as the primary agent in the operator's own profile, given the raw sentence.
+
+    The baseline the worker is measured against: no worker in the workspace,
+    Superpowers and pi-subagents loaded as the operator has them, the recorder
+    loaded explicitly so the scorer sees the same events as direct mode.
+    """
+    return [
+        "pi",
+        "-p",
+        "--mode",
+        "json",
+        "--no-session",
+        "--thinking",
+        "high",
+        "--model",
+        MODEL,
+        "-e",
+        str(RECORD_EXT),
+        sentence,
+    ]
+
+
 def parse_parent_json(stdout: str) -> dict:
     """What the parent did: whether it launched the worker, the brief it wrote, its final text."""
     brief, final, messages, calls = "", "", 0, 0
@@ -230,6 +253,12 @@ def run_once(
         )
         env = child_env(dict(os.environ), str(trace), agent_dir)
         args = build_pi_delegated_args(rung.sentence)
+    elif mode == "primary":
+        agent_dir = mirror_agent_dir(
+            Path.home() / ".pi" / "agent", scratch / "pi-agent", [ws]
+        )
+        env = child_env(dict(os.environ), str(trace), agent_dir, offline=False)
+        args = build_pi_primary_args(rung.sentence)
     else:
         agent_dir = direct_agent_dir(scratch / "pi-agent", prof)
         env = child_env(dict(os.environ), str(trace), agent_dir, offline=True)
@@ -346,7 +375,9 @@ def tool_version(cmd: list[str]) -> str:
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--harness", choices=["pi"], default="pi")
-    parser.add_argument("--mode", choices=["direct", "delegated"], default="direct")
+    parser.add_argument(
+        "--mode", choices=["direct", "delegated", "primary"], default="direct"
+    )
     parser.add_argument("--profile", choices=sorted(PROFILES), required=True)
     parser.add_argument("--rung", type=int, action="append", required=True)
     parser.add_argument("--repeat", type=int, default=1)
