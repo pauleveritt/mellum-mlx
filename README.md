@@ -1,38 +1,28 @@
 # Mellum 2.1 MLX
 
-Convert [Mellum 2.1 Thinking](https://huggingface.co/JetBrains/Mellum2.1-12B-A2.5B-Thinking)
-to MLX and serve it with [oMLX](https://github.com/jundot/omlx), preserving its native hybrid cache.
+[Mellum 2.1 Thinking](https://huggingface.co/JetBrains/Mellum2.1-12B-A2.5B-Thinking)
+as a measured coding worker for Pi, and the MLX/oMLX serving path behind it.
+The installable package is **<https://github.com/pauleveritt/mellum-worker>**;
+this repo holds the research: the ladder, every phase record, the conversion
+script, and the serving validation.
 
-## Recommended path
+## Using it as a coding agent: Mellum Mode and Mellum Worker (shipped 2026-10-09)
 
-Use the existing **6-bit affine MLX conversion, group size 64**, with the native
-BF16 cache and one active request. Mellum's conversion policy keeps the MoE routers
-at 8 bits. Weight quantization does not change the cache precision or attention layout.
-
-The converted model is published at
-<https://huggingface.co/pauleveritt/Mellum2.1-12B-A2.5B-Thinking-mlx-6bit> (9.9 GB,
-two safetensors shards) and lives locally at:
-
-```text
-~/.cache/huggingface/hub/Mellum2.1-12B-A2.5B-Thinking-6bit
-```
-
-Pull it with `hf download pauleveritt/Mellum2.1-12B-A2.5B-Thinking-mlx-6bit` instead
-of reconverting.
-
-## Using it as a coding agent: Mellum Worker and Mellum Mode (shipped 2026-10-09)
+Install from [mellum-worker](https://github.com/pauleveritt/mellum-worker)
+(`pi install git:github.com/pauleveritt/mellum-worker@v0.1.1`, then
+`/skill:mellum-setup`). The recipe is **[docs/mellum-worker.md](docs/mellum-worker.md)**.
 
 Mellum could not run the full Superpowers workflow as the primary agent
 ([recovery report](docs/research/mellum-recovery-2026-10-07/report.md)). The
 measured answer is to run it as a narrowly configured worker under Pi, in one
-of two ways, both documented in **[docs/mellum-worker.md](docs/mellum-worker.md)**:
+of two ways:
 
+- **Mellum Mode** (`/mellum <task>`, `.pi/mellum/mellum-mode.ts`): the worker
+  inside your own session, no parent round trip. 14/15 in the operator profile, against
+  10/15 for Mellum as the primary agent in that profile and 8/15 in bare Pi.
 - **Mellum Worker** (`mellum-worker`), a pi-subagents child (`.pi/agents/mellum-worker.md`): your
   usual model stays the parent, scopes the task, briefs the child, and runs the
   tests itself. 15/15 on the five-rung ladder.
-- **Mellum Mode** (`/mellum <task>`, `.pi/mellum/mellum-mode.ts`): the same worker
-  inside your own session, no parent round trip. 14/15 in the operator profile, against
-  10/15 for Mellum as the primary agent in that profile and 8/15 in bare Pi.
 
 The worker is a 643-character prompt of facts about the test command, the seven
 file tools, and a guard extension (an empty-turn nudge capped at three, a loop
@@ -52,6 +42,28 @@ cached local server generation, not prefill, is the cost. The
 predates the recipe. The OpenCode port shipped in
 <https://github.com/pauleveritt/mellum-worker> (v0.1.1): the same v5 prompt as
 an OpenCode subagent, smoke-tested but not measured on the ladder.
+
+## Serving Mellum on oMLX
+
+Everything below is what the worker runs on: the 6-bit MLX conversion, the
+hybrid cache it must keep, the oMLX settings, and the validation record.
+
+### Recommended path
+
+Use the existing **6-bit affine MLX conversion, group size 64**, with the native
+BF16 cache and one active request. Mellum's conversion policy keeps the MoE routers
+at 8 bits. Weight quantization does not change the cache precision or attention layout.
+
+The converted model is published at
+<https://huggingface.co/pauleveritt/Mellum2.1-12B-A2.5B-Thinking-mlx-6bit> (9.9 GB,
+two safetensors shards) and lives locally at:
+
+```text
+~/.cache/huggingface/hub/Mellum2.1-12B-A2.5B-Thinking-6bit
+```
+
+Pull it with `hf download pauleveritt/Mellum2.1-12B-A2.5B-Thinking-mlx-6bit` instead
+of reconverting.
 
 ### Preserve the hybrid cache
 
