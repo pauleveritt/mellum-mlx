@@ -367,3 +367,17 @@ therefore never tested the output cap or the penalty, and no run was greedy.
 - [ ] **Step 2:** implement; `uv run pytest -q` green.
 - [ ] **Step 3:** runs, after phase 3b, baseline profile first: `--mode direct --guards --profile baseline|tuned --rung 1..5 --repeat 3 --out docs/research/ladder/phase1c-baseline-greedy` and `phase1d-tuned-effective`.
 - [ ] **Step 4:** `docs/research/ladder/phase1d-tuned-effective/README.md`: the paired table, with the effective parameters printed from the records, replacing the phase-1 conclusions.
+
+---
+
+## Backlog (not scheduled)
+
+- **3c — make the skill unconditional, then measure it.** Phase 3b showed the
+  parent reads an *available* `delegate-to-mellum` skill in about 1 run in 10.
+  Candidates: point the worker's advertised `description` at the skill, or a
+  project `AGENTS.md` line. 15 delegated runs; compare brief template use,
+  parent self-verification, re-dispatch, and cost against 3a/3b.
+- **Nudge guard:** make dormant or add a continuation bound (tool-call budget
+  after a nudge) and measure the bounded form; today's cap of 1 is unmeasured.
+- **Loop breaker:** the exact replay argues for enabling it (blocks only the
+  thrash run); enable and measure.
