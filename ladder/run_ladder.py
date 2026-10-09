@@ -13,6 +13,7 @@ import argparse
 import json
 import os
 import shutil
+import signal
 import subprocess
 import tempfile
 import time
@@ -95,7 +96,7 @@ def prepare_workspace(rung: Rung, scratch: Path) -> Path:
     git(ws, "add", "-A")
     git(ws, "-c", "user.name=ladder", "-c", "user.email=ladder@localhost", "commit", "-qm", "baseline")
     if (ws / "pyproject.toml").exists():
-        subprocess.run(["uv", "sync", "--offline"], cwd=ws, capture_output=True)
+        subprocess.run(["uv", "sync", "--offline"], cwd=ws, capture_output=True, timeout=300)
     return ws
 
 
@@ -179,6 +180,16 @@ def table_row(record: dict) -> str:
     )
 
 
+def install_signal_handlers() -> None:
+    """SIGTERM/SIGHUP exit through SystemExit so the profile restore in `finally` still runs."""
+
+    def exit_on_signal(signum, _frame):
+        raise SystemExit(128 + signum)
+
+    for sig in (signal.SIGTERM, signal.SIGHUP):
+        signal.signal(sig, exit_on_signal)
+
+
 def tool_version(cmd: list[str]) -> str:
     try:
         return subprocess.run(cmd, capture_output=True, text=True, timeout=30).stdout.strip()
@@ -198,6 +209,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--omlx", default="http://127.0.0.1:8001")
     args = parser.parse_args(argv)
+    install_signal_handlers()
 
     client = AdminClient(args.omlx)
     versions = {"pi": tool_version(["pi", "--version"]), "omlx": tool_version(["omlx", "--version"])}

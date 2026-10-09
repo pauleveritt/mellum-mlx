@@ -73,3 +73,22 @@ def test_nudges_count_guard_messages_in_requests():
         {"role": "user", "content": "[mellum-guard] Your last turn ended with no reply."},
         {"role": "user", "content": "fix it"}]}}
     assert score([req], set(), {}).nudges == 2
+
+
+def test_bash_mutates_ignores_quoted_operators_and_null_sinks():
+    for command in (
+        'python -c "print(1 > 0)"',
+        "grep -v '>' f",
+        'node -e "[1].map(x => x)"',
+        'echo "a->b"',
+        "python - <<EOF\nprint(1)\nEOF",
+        'cat <<<"abc"',
+        "pytest >> /dev/null && echo ok",
+        "pytest | tee /dev/null",
+    ):
+        assert not bash_mutates(command), command
+
+
+def test_bash_mutates_catches_in_place_editors_and_moves():
+    for command in ("sed -i s/a/b/ f.py", "perl -i -pe s/a/b/ f.py", "mv a.py b.py", "cp a.py b.py", "cd sub && cat > f.py <<EOF\nx\nEOF"):
+        assert bash_mutates(command), command

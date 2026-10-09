@@ -37,8 +37,8 @@ Nothing else changed. No guard, no server setting, no sampling change.
 
 In phase 0 every rung-5 failure was an honest report of still-failing tests
 after one edit cycle. The two added sentences are facts about when the task
-ends, and the model now iterates: rung 5's three runs used 10–27 requests
-(mean across the phase 14.3, vs 12.9 in phase 0), and the largest prompt grew
+ends, and the model now iterates: rung 5's three runs used 19, 27, and 17 requests
+(mean across the phase 14.3, vs 13.3 in phase 0), and the largest prompt grew
 to 76,248 chars (rung 5 r1) — still under the 200,000-char gate, but the
 iterations cost context.
 

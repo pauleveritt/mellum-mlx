@@ -47,3 +47,44 @@ def test_nopenalty_variant_differs_from_tuned_only_by_penalty():
 def test_profiles_have_required_keys():
     for name in ("baseline", "tuned", "tuned-nopenalty"):
         assert {"max_tokens", "thinking_budget_enabled", "presence_penalty"} <= PROFILES[name].keys()
+
+
+def test_restore_is_verified_and_names_the_backup(tmp_path):
+    from ladder.omlx_profiles import RestoreFailed
+
+    path = tmp_path / "model_settings.json"
+    path.write_text("{}")
+
+    class StickyAfterApply(Fake):
+        def put_settings(self, model_id, patch):
+            self.puts.append(patch)
+            if len(self.puts) == 1:
+                self.live.update(patch)  # apply lands, restore is silently ignored
+            return {"success": True}
+
+    fake = StickyAfterApply({"max_tokens": 4096, "thinking_budget_enabled": False, "presence_penalty": 0.0})
+    with pytest.raises(RestoreFailed) as info:
+        with profile(fake, "m", "tuned", path):
+            pass
+    assert ".bak-ladder-" in str(info.value)
+
+
+def test_restore_failure_chains_the_original_error(tmp_path):
+    from ladder.omlx_profiles import RestoreFailed
+
+    class Dies(Fake):
+        def put_settings(self, model_id, patch):
+            if self.puts:
+                raise ConnectionError("server down")
+            self.puts.append(patch)
+            self.live.update(patch)
+            return {}
+
+    with pytest.raises(RestoreFailed) as info:
+        with profile(Dies({"max_tokens": 4096, "thinking_budget_enabled": False, "presence_penalty": 0.0}), "m", "tuned", tmp_path / "s.json"):
+            raise RuntimeError("pi timed out")
+    chain, error = [], info.value
+    while error is not None:
+        chain.append(type(error))
+        error = error.__cause__ or error.__context__
+    assert RuntimeError in chain, chain

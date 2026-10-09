@@ -71,3 +71,16 @@ def test_run_once_never_inherits_stdin(monkeypatch, tmp_path):
     rung = Rung(1, "calculator", "fix it", ["true"], lambda ws, base: CheckResult(False, True))
     run_ladder.run_once(rung, "direct", "baseline", 1, tmp_path / "out", 5, {}, False)
     assert seen.get("stdin") is sp.DEVNULL
+
+
+def test_signal_handlers_raise_system_exit_so_finally_blocks_run():
+    import signal
+
+    from ladder.run_ladder import install_signal_handlers
+
+    install_signal_handlers()
+    for sig in (signal.SIGTERM, signal.SIGHUP):
+        handler = signal.getsignal(sig)
+        import pytest
+        with pytest.raises(SystemExit):
+            handler(sig, None)

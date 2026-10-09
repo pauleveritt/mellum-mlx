@@ -66,6 +66,12 @@ What each setting did or did not do:
   *earlier* stops: it penalises every token already in the context,
   including tool-call scaffolding. Isolated in the variant below.
 
+## Clamp check
+
+With the tuned profile live, a chat request with `max_tokens: 20000` returned
+HTTP 200, `finish_reason: stop` — oMLX clamps to the profile's cap rather than
+rejecting, so the harness limits can stay at 16,384 regardless of profile.
+
 ## Variant: tuned without the penalty
 
 See `../phase1b-tuned-nopenalty-v3/` — the same tuned profile with
@@ -90,7 +96,7 @@ and were deleted.
 | 4 | 3/3 | 2/3 | 1/3 |
 | 5 | 3/3 | 2/3 | 3/3 |
 | empty finals | 1 | 2 | 4 |
-| mean requests | 14.2 | 15.0 | 11.7 |
+| mean requests | 14.3 | 15.1 | 11.7 |
 | edit anchor failures | 5 | 7 | 0 |
 
 12 of 15 without the penalty. The presence penalty is not the cause of the

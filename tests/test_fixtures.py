@@ -46,3 +46,25 @@ def test_rung5_decoy_edit_fails(tmp_path):
     ws = copy(rung, tmp_path)
     (ws / "exports_legacy.py").write_text("# touched\n")
     assert not rung.check(ws, FIXTURES / rung.fixture).passed
+
+
+def test_check_treats_a_deleted_file_as_changed_not_a_crash(tmp_path):
+    rung = RUNGS[5]
+    ws = copy(rung, tmp_path)
+    (ws / "exports_legacy.py").unlink()
+    result = rung.check(ws, FIXTURES / rung.fixture)
+    assert result.passed is False
+
+
+def test_check_treats_a_hung_test_run_as_a_failure(monkeypatch, tmp_path):
+    import subprocess as sp
+
+    from ladder import rungs
+
+    def hang(cmd, **kwargs):
+        raise sp.TimeoutExpired(cmd, kwargs.get("timeout", 0))
+
+    monkeypatch.setattr(rungs.subprocess, "run", hang)
+    rung = RUNGS[1]
+    ws = copy(rung, tmp_path)
+    assert rung.check(ws, FIXTURES / rung.fixture).passed is False

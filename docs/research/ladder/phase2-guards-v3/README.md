@@ -45,10 +45,10 @@ uv run python -m ladder.run_ladder --profile baseline --guards --rung 1 --rung 2
 | --- | --- | --- |
 | 4 r1 | 1 | **recovered**: after the nudge it read the three files, fixed `totals.py`, ran the tests to green, and reported "Files changed: totals.py, render.py, export.py" |
 | 4 r2 | 2 | not recovered: both continuations ended empty again; 13 requests; no file changed |
-| 5 r3 | 2 | not recovered, and worse: 66 requests, 12 edit anchor failures, 7 whole-file writes, two `cat > export.py <<'EOF'` heredocs, a 166k-char prompt, ending empty |
+| 5 r3 | 2 | not recovered, and worse: 66 requests, 12 edit anchor failures, 6 whole-file writes, two `cat > export.py <<'EOF'` heredocs, a 166k-char prompt, ending empty |
 
-The other two rung-5 failures were not nudged: 5 r1 reported failing tests
-honestly and stopped with text; 5 r2 passed.
+The other rung-5 failure, 5 r1, was not nudged: it reported failing tests
+honestly and stopped with text. 5 r2 passed.
 
 ## Reading
 
@@ -56,7 +56,7 @@ honestly and stopped with text; 5 r2 passed.
 One of three empty finals was a model that had simply not written its
 reply; a single nudge finished the job. The other two were models that had
 nothing further to do and said so by stopping; nudging them twice produced
-either two more empty turns or a fifty-request thrash that surfaced, for
+either two more empty turns or a sixty-six-request thrash that surfaced, for
 the first time in 60 runs, the heredoc-write channel (`bash_file_mutations`
 2) and an anchor-failure cascade (12) — the pathologies local-ai-pi
 recorded, appearing only once the run was pushed past its natural end.

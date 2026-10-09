@@ -48,6 +48,10 @@ class ProfileMismatch(RuntimeError):
     """The server accepted a settings update but the live values differ."""
 
 
+class RestoreFailed(RuntimeError):
+    """The original profile could not be put back; the message names the backup file."""
+
+
 class SettingsClient(Protocol):
     def get_settings(self, model_id: str) -> dict: ...
     def put_settings(self, model_id: str, patch: dict) -> dict: ...
@@ -94,10 +98,18 @@ def apply_profile(client: SettingsClient, model_id: str, name: str) -> dict:
 def profile(client: SettingsClient, model_id: str, name: str, settings_path: Path) -> Iterator[dict]:
     settings_path = Path(settings_path)
     snapshot = client.get_settings(model_id)
+    backup = settings_path.with_name(f"{settings_path.name}.bak-ladder-{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}")
     if settings_path.exists():
-        stamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
-        shutil.copy2(settings_path, settings_path.with_name(f"{settings_path.name}.bak-ladder-{stamp}"))
+        shutil.copy2(settings_path, backup)
     try:
         yield apply_profile(client, model_id, name)
     finally:
-        client.put_settings(model_id, {key: snapshot.get(key) for key in PROFILES[name]})
+        wanted = {key: snapshot[key] for key in PROFILES[name] if key in snapshot}
+        try:
+            client.put_settings(model_id, wanted)
+            live = client.get_settings(model_id)
+        except Exception as error:
+            raise RestoreFailed(f"restore of {model_id} failed ({error!r}); original settings are in {backup}") from error
+        stuck = {key: (value, live.get(key)) for key, value in wanted.items() if live.get(key) != value}
+        if stuck:
+            raise RestoreFailed(f"restore of {model_id} did not take: {stuck}; original settings are in {backup}")

@@ -12,15 +12,30 @@ import json
 import re
 from dataclasses import asdict, dataclass, field
 
-# A shell redirect or tee that writes a file. Stream-merge forms such as
-# ``2>&1`` and ``>/dev/null`` are stripped first so they do not count.
-_NOISE = re.compile(r"\d?>&\d|&?>\s*/dev/null")
-_MUTATION = re.compile(r">{1,2}\s*\S|\btee\b|<<-?\s*['\"]?\w")
+_QUOTED = re.compile(r"'[^']*'|\"(?:\\.|[^\"\\])*\"")
+_HEREDOC = re.compile(r"<<-?\s*(['\"]?)(\w+)\1[^\n]*\n.*?(?:\n\2\s*$|\Z)", re.S | re.M)
+_HEREDOC_OPEN = re.compile(r"<<-?\s*['\"]?\w+")
+_NULL_SINK = re.compile(r"\d?>>?\s*/dev/null|\d>&\d|&>\s*/dev/null|\btee\s+/dev/null")
+_REDIRECT_TO_PATH = re.compile(r"(?<![<>|&=\-])>{1,2}\s*(?!&)[\w./~$-]")
+_WRITING_COMMAND = re.compile(r"(?:^|[;&|]\s*)(?:tee\s+(?!-)|sed\s+-[a-zA-Z]*i|perl\s+-[a-zA-Z]*i|mv\s|cp\s)")
 
 
 def bash_mutates(command: str) -> bool:
-    """True when a bash command writes a file through a redirect, tee, or heredoc."""
-    return bool(_MUTATION.search(_NOISE.sub("", command)))
+    """True when a bash command writes a file: a redirect to a path, tee, an
+    in-place editor, mv/cp, or a heredoc fed to a redirect.
+
+    Quoted strings and heredoc bodies are removed before matching so that
+    `python -c "print(1 > 0)"` and `grep -v '>'` do not count, and null sinks
+    such as `2>&1`, `>/dev/null`, `tee /dev/null` are stripped.
+    """
+    text = _HEREDOC.sub(lambda m: m.group(0).split("\n", 1)[0], command)
+    text = _QUOTED.sub("", text)
+    text = _NULL_SINK.sub("", text)
+    if _REDIRECT_TO_PATH.search(text):
+        return True
+    if _WRITING_COMMAND.search(text):
+        return True
+    return False
 
 
 def call_key(name: str, payload: object) -> str:

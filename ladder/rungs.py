@@ -10,6 +10,7 @@ from pathlib import Path
 
 FIXTURES = Path(__file__).resolve().parent.parent / "fixtures"
 PYTEST = ["uv", "run", "--offline", "pytest", "-q"]
+COMMAND_TIMEOUT = 300
 IGNORED = shutil.ignore_patterns(".venv", "__pycache__", ".pytest_cache", "node_modules")
 
 
@@ -36,20 +37,29 @@ class Rung:
 
 
 def _same(ws: Path, base: Path, name: str) -> bool:
-    return (ws / name).read_bytes() == (base / name).read_bytes()
+    """Byte-identical to the baseline; a missing or renamed file counts as changed."""
+    try:
+        return (ws / name).read_bytes() == (base / name).read_bytes()
+    except FileNotFoundError:
+        return False
+
+
+def _run(cmd: list[str], ws: Path) -> subprocess.CompletedProcess | None:
+    """Run a check command; a hang past COMMAND_TIMEOUT is reported as no result."""
+    try:
+        return subprocess.run(cmd, cwd=ws, capture_output=True, text=True, timeout=COMMAND_TIMEOUT)
+    except subprocess.TimeoutExpired:
+        return None
 
 
 def _tests_pass(cmd: list[str], ws: Path) -> bool:
-    return subprocess.run(cmd, cwd=ws, capture_output=True, text=True).returncode == 0
+    proc = _run(cmd, ws)
+    return proc is not None and proc.returncode == 0
 
 
 def _collect(ws: Path) -> set[str]:
-    out = subprocess.run(
-        ["uv", "run", "--offline", "pytest", "--collect-only", "-q"],
-        cwd=ws,
-        capture_output=True,
-        text=True,
-    ).stdout
+    proc = _run(["uv", "run", "--offline", "pytest", "--collect-only", "-q"], ws)
+    out = proc.stdout if proc is not None else ""
     return {line.strip() for line in out.splitlines() if "::" in line}
 
 
