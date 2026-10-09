@@ -339,3 +339,39 @@ def test_chunk_args_continue_one_session_and_load_guards_and_recorder(tmp_path):
     exts = [args[i + 1] for i, a in enumerate(args) if a == "-e"]
     assert str(GUARDS_EXT) in exts and str(RECORD_EXT) in exts
     assert args[-1] == "step text"
+
+
+def test_mode_runs_record_guards_on_because_the_mode_always_loads_them(
+    monkeypatch, tmp_path
+):
+    import json
+    import subprocess as sp
+
+    from ladder import run_ladder
+    from ladder.rungs import CheckResult, Rung
+
+    monkeypatch.setattr(
+        run_ladder.subprocess,
+        "run",
+        lambda args, **kw: sp.CompletedProcess(args, 0, stdout="", stderr=""),
+    )
+    monkeypatch.setattr(run_ladder, "prepare_workspace", lambda rung, scratch: scratch)
+    monkeypatch.setattr(run_ladder, "baseline_index", lambda ws: (set(), {}))
+    monkeypatch.setattr(run_ladder, "mirror_agent_dir", lambda s, d, t, **kw: d)
+    rung = Rung(
+        1, "calculator", "fix it", ["true"], lambda ws, base: CheckResult(False, True)
+    )
+    run_ladder.run_once(rung, "mode", "baseline", 1, tmp_path / "out", 5, {}, False)
+    record = json.loads(
+        (tmp_path / "out" / "rung1-baseline-mode-guards-r1" / "run.json").read_text()
+    )
+    assert record["guards"] is True and record["subagents_config"] is None
+
+
+def test_split_brief_without_step_headings_returns_the_whole_text_and_warns(caplog):
+    from ladder.run_ladder import split_brief
+
+    with caplog.at_level("WARNING"):
+        steps = split_brief("# Task\n\n## Step 1: Read\nx\n")
+    assert steps == ["# Task\n\n## Step 1: Read\nx"]
+    assert "no `## Step N` headings" in caplog.text

@@ -106,7 +106,10 @@ Project-local; the only change outside the project is the `models.json` entry at
   ([A11](research/ladder/ablation-a11-delegated-nointercom/README.md)).
   Every other subagent of yours loses `contact_supervisor` too, so only if
   none of them needs it.
-- `~/.pi/agent/models.json` omlx entry: `contextWindow 56000`, `maxTokens
+- `~/.pi/agent/models.json` omlx entry must set `supportsDeveloperRole: false`:
+  Pi otherwise sends the instructions as a `developer` message for a
+  reasoning model on a localhost provider, and the mode replaces either
+  role but older versions of the filter did not. Also `contextWindow 56000`, `maxTokens
   16384`, `thinkingFormat: qwen-chat-template`.
 
 Try it safely:
@@ -216,10 +219,15 @@ prompt instead of 17k, and the wall time is the same (prefill is cached;
 the time is generation). What you give up against delegation is the
 parent's independent test run afterwards; run the tests yourself.
 
-Two cautions: the filter runs last among extensions' payload hooks, so
-another extension that rewrites requests would conflict silently; and the
-mode's tool results stay in your session, so a long Mellum task leaves
-your parent model a large next request.
+Cautions. Only the headless path has been through the ladder; the
+interactive `/mellum on|off` path (markers, restore, the refusal to
+auto-compact while on) is covered by unit tests. Pi loads `-e` extensions
+first, so the filter runs before any package's payload hook; none of
+Superpowers, pi-subagents or context7 rewrites the payload today. Mellum's
+tool results stay in your session, so a long task leaves your usual model
+a large next request. Auto-compaction is refused while the mode is on
+(`/compact` still works); run `/mellum off` before a long parent turn.
+The `-e` paths are relative to the repository root.
 
 ## 5. Measuring
 
@@ -272,8 +280,8 @@ Not settled:
   first reply ([A15/A16](research/ladder/ablation-a15-chunked-brief/README.md)).
   The sentence plus the worker prompt stays the cheapest reliable input.
 - pi-subagents appends an "Intercom orchestration channel" block (about
-  2,000 characters) to the child prompt even with `contact_supervisor`
-  excluded; the worker ignores it.
+  1,500 characters) to the child prompt even with `contact_supervisor`
+  excluded; `intercomBridge.mode: off` removes it ([A11](research/ladder/ablation-a11-delegated-nointercom/README.md)).
 - Mellum as the primary agent is viable through rung 4 (10/15 overall) and
   fails rung 5; the worker's gain is at the top of the ladder, not an escape
   from a broken primary mode.

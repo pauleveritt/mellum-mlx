@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import os
 import re
 import shutil
@@ -26,6 +27,7 @@ from .pi_profile import direct_agent_dir, mirror_agent_dir, prepare_pi_workspace
 from .rungs import FIXTURES, RUNGS, Rung, copy_fixture
 from .score import score
 
+log = logging.getLogger(__name__)
 ROOT = Path(__file__).resolve().parent.parent
 PROMPT_FILE = ROOT / "prompts" / "mellum-worker.md"
 RECORD_EXT = ROOT / "ladder" / "record-pi.js"
@@ -204,6 +206,9 @@ def split_brief(text: str) -> list[str]:
     head, *parts = re.split(r"^## Step \d+\s*$", text, flags=re.MULTILINE)
     steps = [part.strip() for part in parts if part.strip()]
     if not steps:
+        log.warning(
+            "split_brief: no `## Step N` headings found; sending the brief as one prompt"
+        )
         return [text.strip()]
     steps[0] = head.strip() + "\n\n" + steps[0]
     return steps
@@ -390,9 +395,7 @@ def run_once(
         brief_text = (BRIEFS / f"rung{rung.number}.md").read_text()
         if mode == "chunked":
             steps = split_brief(brief_text)
-            args = build_pi_chunk_args(
-                scratch / "sessions", "run", steps[0], guards, prompt
-            )
+            args = []  # built per step below
         else:
             steps = [brief_text]
             args = build_pi_direct_args(
@@ -406,6 +409,7 @@ def run_once(
             dict(os.environ), str(trace), agent_dir, offline=False, mode=True
         )
         args = build_pi_mode_args(rung.sentence)
+        guards = True  # the mode always loads the guard extension
     else:
         agent_dir = direct_agent_dir(scratch / "pi-agent", prof)
         env = child_env(dict(os.environ), str(trace), agent_dir, offline=True)
@@ -430,11 +434,13 @@ def run_once(
             build_pi_chunk_args(scratch / "sessions", "run", step, guards, prompt)
             for step in steps
         ]
+    prompts_run = 0
     for i, step_argv in enumerate(step_args):
         remaining = deadline - (time.time() - started)
         if remaining <= 0:
             deadline_hit = True
             break
+        prompts_run += 1
         if i:
             stdout += f"\n[step {i + 1}]\n"
         try:
@@ -474,9 +480,10 @@ def run_once(
         "harness": "pi",
         "plain": plain,
         "guards": guards,
-        "subagents_config": subagents_config,
+        "subagents_config": subagents_config if mode == "delegated" else None,
         "strip_thinking": strip_thinking if mode == "direct" else None,
-        "prompts": prompts,
+        "prompts": prompts_run,
+        "prompts_planned": prompts,
         "brief_file": f"ladder/briefs/rung{rung.number}.md"
         if mode in ("chunked", "brief")
         else None,
@@ -581,7 +588,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument(
         "--plain",
         action="store_true",
-        help="primary mode: no extensions, skills, or context files (Pi's base prompt only)",
+        help="direct and brief modes: Pi thinking level (ignored by chunked, mode, delegated, primary)",
     )
     parser.add_argument(
         "--prompt",

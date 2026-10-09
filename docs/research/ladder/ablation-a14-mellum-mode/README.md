@@ -70,9 +70,14 @@ worker. The delegated recipe stays the one with independent verification.
 
 ## Caveats
 
-Three repeats, sampled decoding. The mode's filter depends on
-`before_provider_request` running after every other extension's
-handlers; a future extension that also rewrites the payload is a silent
-conflict. After `/mellum off` the parent's next request carries the
+Three repeats, sampled decoding. The guard extension was loaded in every
+run (the mode always loads it) although these records' `guards` field
+says `False` and the table label omits `+guards`; the runner was corrected
+afterwards. **Only the headless path was measured**: with `MELLUM_MODE=1`
+no on-marker is sent, so the marker logic, `/mellum off`, and the
+compaction guard are covered by unit tests, not by the ladder. Pi loads
+`-e` extensions before packages, so the filter runs *first* among payload
+hooks and later handlers could re-add content; none of the operator's
+packages hooks `before_provider_request` today. After `/mellum off` the parent's next request carries the
 mode's tool results in full; collapsing them into a handoff block is
 follow-up work.

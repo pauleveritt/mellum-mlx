@@ -18,7 +18,7 @@ uv run python -m ladder.run_ladder --mode delegated --profile baseline --guards 
 
 | measure (15 runs) | A10 | A11 |
 | --- | --- | --- |
-| child system prompt, chars | 2,711 | 1,220 (v5 643 + pi-subagents' 521-char preamble + cwd) |
+| child system prompt, chars | 2,711 | 1,220 (v5 643 + pi-subagents' 521-char preamble + `<active_agent>`/cwd lines) |
 | child prefill, k chars per run | 221 | 176 |
 | child requests per run, mean / max | 11.1 / 16 | 10.7 / 17 |
 | child tool errors | 7 | 6 |
@@ -28,8 +28,8 @@ uv run python -m ladder.run_ladder --mode delegated --profile baseline --guards 
 
 ## Reading
 
-**Holds, and the child's prompt is 55% smaller.** The 20% drop in prefill
-is the block's share of every request. Passes, requests and errors did not
+**Holds, and the child's prompt is 55% smaller (1,491 characters less).**
+The 20% drop in prefill is the block's share of every request. Passes, requests and errors did not
 move. Wall time did not move either: prefill on oMLX is mostly cache hits
 (86% of the direct worker's input tokens in A3), so a shorter prompt is
 cheaper in tokens, not noticeably in seconds.

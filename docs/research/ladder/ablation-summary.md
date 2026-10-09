@@ -24,7 +24,7 @@ scorer column that was zero becomes non-zero.
 | [A13](ablation-a13-budget-medium/README.md) | (request-level `thinking_budget` 2,048 via a hook) | 15/15 | inert | reaches the server but is not enforced: oMLX builds the budget processor only with a reasoning parser configured; no forced close in 205 turns |
 | [A14](ablation-a14-mellum-mode/README.md) | (Mellum mode: the worker inside the main session, operator profile) | 14/15 | ships | 10/15 → 14/15 in the same profile at the same sampling; prefill −78%; wall unchanged (prefill is cached); no parent round trip |
 | [A15](ablation-a15-chunked-brief/README.md) | (Markdown brief, one prompt per step in one session) | 15/15 | no | 2.4× the time, 2.5× the output tokens of the sentence; bounded turns did not reduce empty finals |
-| [A16](ablation-a15-chunked-brief/README.md) | (the same brief as one prompt) | 11/15 | no | the model stops at the brief's first "reply" step; a one-prompt brief must not contain intermediate replies |
+| [A16](ablation-a16-brief-one-prompt/README.md) | (the same brief as one prompt) | 11/15 | no | the model stops at the brief's first "reply" step; a one-prompt brief must not contain intermediate replies |
 
 ## The worker, before and after
 
@@ -41,8 +41,9 @@ scorer column that was zero becomes non-zero.
 
 Wall seconds are what the runner measured on a shared, uncontrolled clock.
 "Mellum requests" are provider requests to the local server; "prefill" is
-the total characters of those requests' payloads per run, which is what a
-local server actually pays. For the delegated rows the parent's own tokens
+the total characters of those requests' payloads per run. On oMLX most of
+it is cache hits (86% of input tokens in A3), so it is a token count, not
+the cost that scales; A12 showed generation is. For the delegated rows the parent's own tokens
 are not shown. Fifteen runs each.
 
 | setup | pass | wall s | Mellum requests per run (max) | Mellum prefill, k chars per run |
@@ -83,8 +84,8 @@ Per rung, mean wall seconds:
   and 3.6 requests per run), so the 643-character prompt is cheaper per
   request but not measurably faster per task.
 - Request count is nearly flat across setups, 11–14 per run. The
-  difference is what each request carries, not how many there are; on a
-  local server the prefill column is the cost that scales.
+  difference is what each request carries, not how many there are; and
+  since prefill is cached, what scales is generated tokens (A12, A14).
 
 ## The review's correction
 

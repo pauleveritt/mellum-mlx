@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "status": "PASS",
+  "recorded_at": "2026-10-07T21:15:01.002Z",
+  "scope": "Pinned local source structure and file integrity; no inference or export qualification",
+  "model": "JetBrains/Mellum2.1-12B-A2.5B-Thinking",
+  "revision": "6f239041e7c79166f75f6788dbf7d1971fe1db89",
+  "source_path": "/Users/pauleveritt/.cache/huggingface/hub/models--JetBrains--Mellum2.1-12B-A2.5B-Thinking/snapshots/6f239041e7c79166f75f6788dbf7d1971fe1db89",
+  "validator": {
+    "path": "/Users/pauleveritt/.cache/mellum-coreai/stage0/6f239041e7c79166f75f6788dbf7d1971fe1db89/source_inventory.cjs",
+    "sha256": "63cd23ec5f5ed5955ca0e1790abe1ac2501e305fdc97cafbe56e776230b110d1",
+    "node_version": "v24.19.0",
+    "negative_controls": 6
+  },
+  "totals": {
+    "shards": 5,
+    "tensors": 5631,
+    "parameters": 12149923072,
+    "tensor_data_bytes": 24299846144,
+    "shard_file_bytes": 24300538808,
+    "auxiliary_file_bytes": 7798769
+  },
+  "dtype": "BF16",
+  "unexpected_tensors": [],
+  "missing_tensors": [],
+  "mtp_predictor_drafter_tensors": [],
+  "checks": {
+    "exact_expected_names": true,
+    "exact_expected_shapes": true,
+    "all_bf16": true,
+    "index_header_bijection": true,
+    "contiguous_nonoverlapping_offsets": true,
+    "byte_counts_and_file_lengths": true,
+    "all_source_file_hashes": true,
+    "cache_content_addresses": true
+  },
+  "shards": [
+    {
+      "name": "model-00001-of-00005.safetensors",
+      "tensors": 1092,
+      "header_bytes": 133720,
+      "data_bytes": 4999397376,
+      "bytes": 4999531104,
+      "sha256": "f5ccf8012c7d44fd2598325bf2482b8fc21792ef888de68f9ca8c9053c2e022f",
+      "cache_blob": "f5ccf8012c7d44fd2598325bf2482b8fc21792ef888de68f9ca8c9053c2e022f",
+      "cache_address_verified": true
+    },
+    {
+      "name": "model-00002-of-00005.safetensors",
+      "tensors": 1202,
+      "header_bytes": 147296,
+      "data_bytes": 4996457472,
+      "bytes": 4996604776,
+      "sha256": "266beea6f34dea9c86414d8bf8cb35c0f4a53330731d99ed41ec666390758e39",
+      "cache_blob": "266beea6f34dea9c86414d8bf8cb35c0f4a53330731d99ed41ec666390758e39",
+      "cache_address_verified": true
+    },
+    {
+      "name": "model-00003-of-00005.safetensors",
+      "tensors": 1202,
+      "header_bytes": 148208,
+      "data_bytes": 4996457472,
+      "bytes": 4996605688,
+      "sha256": "da9a04fb6ea121f71e30920c7657b889ca0078aea57d878e5cb768ebb3e4483a",
+      "cache_blob": "da9a04fb6ea121f71e30920c7657b889ca0078aea57d878e5cb768ebb3e4483a",
+      "cache_address_verified": true
+    },
+    {
+      "name": "model-00004-of-00005.safetensors",
+      "tensors": 1202,
+      "header_bytes": 148208,
+      "data_bytes": 4996457472,
+      "bytes": 4996605688,
+      "sha256": "32f27ab7f38ff5d98ac3d50dabb57ab8a55a8aa552febd42c2a5b01f4116262a",
+      "cache_blob": "32f27ab7f38ff5d98ac3d50dabb57ab8a55a8aa552febd42c2a5b01f4116262a",
+      "cache_address_verified": true
+    },
+    {
+      "name": "model-00005-of-00005.safetensors",
+      "tensors": 933,
+      "header_bytes": 115192,
+      "data_bytes": 4311076352,
+      "bytes": 4311191552,
+      "sha256": "d8bbb9b829cb3279e23f59af55bf68ec00cc8ad30923c227d8b13c7d831e6b3b",
+      "cache_blob": "d8bbb9b829cb3279e23f59af55bf68ec00cc8ad30923c227d8b13c7d831e6b3b",
+      "cache_address_verified": true
+    }
+  ],
+  "auxiliary_files": [
+    {
+      "name": ".gitattributes",
+      "bytes": 1576,
+      "sha256": "f948bbe51bfb87ec2cfaf6be567b9c1c90be70eea32ce71cc77737f031c4a7b7",
+      "cache_blob": "7624774fc4ca389dd2cfde597233efae6b302281",
+      "cache_address_verified": true
+    },
+    {
+      "name": "README.md",
+      "bytes": 8896,
+      "sha256": "04d66e99a216fd91b9b6df535acc34d2b2d7dfb1fb0c34bc507c3b9192fbc3aa",
+      "cache_blob": "fc1543509f30ecbf05eb2914600682f693d3a4f9",
+      "cache_address_verified": true
+    },
+    {
+      "name": "chat_template.jinja",
+      "bytes": 4849,
+      "sha256": "4593a34d52f3364ac13ce57f4bea5688924e8942da6df8201e411db17e729f48",
+      "cache_blob": "116fec1e4c4f6d8c370111d0ad694ef752858412",
+      "cache_address_verified": true
+    },
+    {
+      "name": "config.json",
+      "bytes": 2329,
+      "sha256": "f43d018246094dee6dca455b3072766b6acbefd1ac8e7fe664df34710606a541",
+      "cache_blob": "51a8384f7f486efa2b78b5a1f8ee82760c0de50a",
+      "cache_address_verified": true
+    },
+    {
+      "name": "generation_config.json",
+      "bytes": 111,
+      "sha256": "a9dc104ca398a2ef376d3f2fbb03037d99950ddb2db0cd041b98398cf1fc8d7c",
+      "cache_blob": "a9500a728d7ffc4a81bec6d90377f7863321446e",
+      "cache_address_verified": true
+    },
+    {
+      "name": "mellum-logo-dark.svg",
+      "bytes": 5176,
+      "sha256": "e55d257b537fd279c60fae86145191e1e6cac61b730966a061b126c0fd10960b",
+      "cache_blob": "0e8d124bdcef96aef2b74476c9b9a3f0014136ed",
+      "cache_address_verified": true
+    },
+    {
+      "name": "mellum21_summary.png",
+      "bytes": 149517,
+      "sha256": "478cced2cb467df6f0be1f933e8a920231fe30006bbfe18305e293488a1218e9",
+      "cache_blob": "478cced2cb467df6f0be1f933e8a920231fe30006bbfe18305e293488a1218e9",
+      "cache_address_verified": true
+    },
+    {
+      "name": "model.safetensors.index.json",
+      "bytes": 526510,
+      "sha256": "a6ad930e5bb35ea92d5b734c4df4649bfcfdcd899f64b0a83efe40fe0ab9b60e",
+      "cache_blob": "1f2d70f3a8c3e48a2bdd0c6ff137b20964f3a82c",
+      "cache_address_verified": true
+    },
+    {
+      "name": "special_tokens_map.json",
+      "bytes": 1185,
+      "sha256": "20e1ead0b0986b55989aa8116bafe63efcbae0daf8ed047970cd28b36aada4d9",
+      "cache_blob": "8245cf33537325c3cf60028ce625da5aee09d124",
+      "cache_address_verified": true
+    },
+    {
+      "name": "tokenizer.json",
+      "bytes": 7091587,
+      "sha256": "58548a346eb073e5132bf7d8ad17dc6971bca36ade378ca4d2bfbc49bf60da2a",
+      "cache_blob": "6d5c16d2f9452829c41ad4441f9e0c89833d5ef4",
+      "cache_address_verified": true
+    },
+    {
+      "name": "tokenizer_config.json",
+      "bytes": 7033,
+      "sha256": "e2950960d2a3040a1938e6357c8c3628d531133c464286a7869b2e0504fcc59e",
+      "cache_blob": "360a848ea68319c453479a3f49edd60fb74d80ab",
+      "cache_address_verified": true
+    }
+  ],
+  "tensor_inventory": {
+    "path": "/Users/pauleveritt/.cache/mellum-coreai/stage0/6f239041e7c79166f75f6788dbf7d1971fe1db89/tensor_inventory.json",
+    "sha256": "3ac78f1d31b18a17739bb6ac1be2cf78ef64a7a54179ab24746f6be325a9afbe"
+  },
+  "limitations": [
+    "Integrity matches local cache content addresses; no independent publisher checksum retrieval.",
+    "Header validation does not validate tensor values or numerical behavior.",
+    "MTP absence applies only to this pinned snapshot."
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "status": "BLOCKED",
+  "recorded_on": "2026-10-07",
+  "scope": "Read-only build-host baseline; not runtime qualification",
+  "host": {
+    "model": "MacBook Pro",
+    "model_identifier": "Mac17,7",
+    "chip": "Apple M5 Max",
+    "total_unified_memory_gb": 128,
+    "macos_version": "27.0.1",
+    "macos_build": "26A434"
+  },
+  "toolchain": {
+    "xcode_version": "27.0",
+    "xcode_build": "27A266a",
+    "developer_directory": "/Applications/Xcode.app/Contents/Developer",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
+    "coreai_framework_present": true,
+    "coreai_build_found_by_xcrun": false,
+    "caix_found_on_path": false
+  },
+  "existing_mlx_lockfile": {
+    "python_requirement": ">=3.14",
+    "mlx_lm_version": "0.32.0",
+    "transformers_version": "5.19.0",
+    "installed_environment_verified": false
+  },
+  "source_metadata_recheck": {
+    "revision": "6f239041e7c79166f75f6788dbf7d1971fe1db89",
+    "num_layers": 28,
+    "sliding_window": 1024,
+    "max_position_embeddings": 131072,
+    "indexed_tensor_count": 5631,
+    "indexed_shard_count": 5,
+    "mtp_predictor_drafter_tensor_names": [],
+    "checksums_verified": true,
+    "headers_rechecked_in_this_step": true,
+    "inventory_report": "source_manifest.json",
+    "contract_report": "model_contract.json",
+    "configuration_and_tokenizer_metadata_verified": true
+  },
+  "pending": [
+    "Deployment-target confirmation",
+    "Pinned export/runtime environment",
+    "Tiny Python-to-Core-AI-to-Swift export/load test"
+  ],
+  "observations": [
+    "Missing coreai-build does not establish that runtime specialization is unavailable.",
+    "CoreAI.framework presence does not prove exports, numerical parity, ANE placement, or caix serving."
+  ],
+  "evidence_commands": [
+    "sw_vers",
+    "system_profiler SPHardwareDataType",
+    "xcodebuild -version",
+    "xcode-select -p",
+    "xcrun --show-sdk-path",
+    "xcrun --find coreai-build",
+    "command -v caix",
+    "CoreAI.framework directory existence check",
+    "Read pyproject.toml and uv.lock",
+    "Read pinned config.json and model.safetensors.index.json with Node"
+  ],
+  "configured_python": {
+    "python_version": "Python 3.14",
+    "environment_type": "venv",
+    "executable_path": "/Users/pauleveritt/projects/pauleveritt/mellum-mlx/.venv/bin/python",
+    "package_manager": "uv",
+    "evidence": "jetbrains_air_ide get_python_environment for main.py",
+    "toolchain_executed": false
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "omlx/Mellum2.1-12B-A2.5B-Thinking-6bit",
+  "small_model": "omlx/Mellum2.1-12B-A2.5B-Thinking-6bit",
+  "share": "disabled",
+  "snapshot": false,
+  "instructions": [],
+  "skills": { "paths": [] },
+  "agent": {
+    "build": {
+      "model": "omlx/Mellum2.1-12B-A2.5B-Thinking-6bit",
+      "temperature": 0,
+      "steps": 12
+    }
+  },
+  "provider": {
+    "omlx": {
+      "npm": "@ai-sdk/openai-compatible",
+      "options": { "baseURL": "http://127.0.0.1:8001/v1" },
+      "models": {
+        "Mellum2.1-12B-A2.5B-Thinking-6bit": {
+          "name": "Mellum 2.1 Q6",
+          "reasoning": true,
+          "limit": { "context": 56000, "input": 51904, "output": 4096 },
+          "options": {
+            "chat_template_kwargs": { "enable_thinking": true, "preserve_thinking": true },
+            "top_p": 1,
+            "top_k": 0,
+            "min_p": 0,
+            "seed": 42
+          }
+        }
+      }
+    }
+  },
+  "permission": {
+    "*": "deny",
+    "read": "allow",
+    "grep": "allow",
+    "glob": "allow",
+    "list": "allow",
+    "edit": "allow",
+    "bash": "allow"
+  }
+}

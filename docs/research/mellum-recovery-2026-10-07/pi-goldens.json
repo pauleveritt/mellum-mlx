@@ -1,0 +1,35 @@
+[
+  {
+    "seed": 101,
+    "file": "<WORKDIR>/fixture-101/source.py",
+    "expected_values": [
+      "elm709382",
+      "pine988267",
+      "ash304214"
+    ],
+    "expected_final": "elm709382 pine988267 ash304214",
+    "prompt_file": "<WORKDIR>/pi-battery-101.prompt.md"
+  },
+  {
+    "seed": 202,
+    "file": "<WORKDIR>/fixture-202/source.py",
+    "expected_values": [
+      "elm900987",
+      "pine504267",
+      "ash776101"
+    ],
+    "expected_final": "elm900987 pine504267 ash776101",
+    "prompt_file": "<WORKDIR>/pi-battery-202.prompt.md"
+  },
+  {
+    "seed": 303,
+    "file": "<WORKDIR>/fixture-303/source.py",
+    "expected_values": [
+      "elm133195",
+      "pine351849",
+      "ash876428"
+    ],
+    "expected_final": "elm133195 pine351849 ash876428",
+    "prompt_file": "<WORKDIR>/pi-battery-303.prompt.md"
+  }
+]

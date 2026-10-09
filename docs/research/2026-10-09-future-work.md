@@ -22,4 +22,4 @@ unmeasured or measured once, with what it would cost to settle.
 Not scheduled, with reason: stripping prior-turn thinking (A12: 60% slower);
 a request-level thinking budget without a reasoning parser (A13: inert);
 Pi's thinking level (A5: never reaches oMLX); a parent-side skill (3b: read
-2/15); chunked briefs as shipped (A15: 2.4× cost).
+2/15); chunked briefs as measured (A15: 2.4× cost).

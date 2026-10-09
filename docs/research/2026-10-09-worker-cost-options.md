@@ -15,7 +15,7 @@ Per task, delegated recipe as it ships ([A10](ladder/ablation-a10-delegated-v5/R
 | wall, mean | 54 s | 30/38/24/77/99 s by rung |
 | parent (DeepSeek Flash) | 6.5 turns, 2,900 output tokens, 19k input + 100k cache-read tokens | reads code, writes a 1,100-char brief, launches, runs the tests itself |
 | child (Mellum) requests | 11.1 per run, max 16 | |
-| child system prompt | 2,711 chars | **643 ours**; 2,068 pi-subagents (521 preamble + 1,582 intercom block + cwd) |
+| child system prompt | 2,711 chars | **643 ours**; 2,068 pi-subagents (a 521-char preamble, the intercom block, `<active_agent>` and cwd lines; A11 measured the intercom block's removal at 1,491) |
 | child prefill | 221k chars per run | 86% of input tokens are oMLX cache hits (measured on the direct worker, A3) |
 
 The same tasks with the worker alone (direct mode, [A3](ladder/ablation-a3-v4b/README.md)):
@@ -153,8 +153,8 @@ tools.
 
 The brief is the one input never varied on purpose. In direct mode the
 worker gets the raw sentence; in delegated mode it gets whatever the parent
-improvises. Three experiments, each a `--brief` or `--chunked` switch on
-the runner and a fixed Markdown document per rung in the fixtures:
+improvises. Three experiments, each a runner mode (`--mode brief`, `--mode chunked`)
+with a fixed Markdown document per rung in `ladder/briefs/`:
 
 1. **Brief shape, one prompt.** The task as a Markdown document in a fixed
    shape (files, change, test command, done-when, do-not-touch), handed to

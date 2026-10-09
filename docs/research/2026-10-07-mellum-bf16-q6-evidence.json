@@ -1,0 +1,335 @@
+{
+  "date": "2026-10-07",
+  "runtime": "mlx-lm 0.32.0 / mlx 0.32.3",
+  "prefill_step_size": 512,
+  "configuration_audit": {
+    "equal_except_quantization": true,
+    "tokenizer_bytes_equal": true,
+    "chat_template_bytes_equal": true
+  },
+  "weight_audit": [
+    {
+      "sample": "embedding",
+      "shape": [
+        64,
+        2304
+      ],
+      "relative_rmse": 0.02287815511226654,
+      "equal": false
+    },
+    {
+      "sample": "q_proj",
+      "shape": [
+        64,
+        2304
+      ],
+      "relative_rmse": 0.02278744801878929,
+      "equal": false
+    },
+    {
+      "sample": "router",
+      "shape": [
+        64,
+        2304
+      ],
+      "relative_rmse": 0.013102810829877853,
+      "equal": false
+    },
+    {
+      "sample": "expert_up",
+      "shape": [
+        64,
+        2304
+      ],
+      "relative_rmse": 0.02263817936182022,
+      "equal": false
+    },
+    {
+      "sample": "q_norm",
+      "shape": [
+        128
+      ],
+      "relative_rmse": 0,
+      "equal": true
+    }
+  ],
+  "exact_quantization_audit": {
+    "checks": [
+      {
+        "sample": "embedding",
+        "bits": 6,
+        "source_dtype": "mlx.core.bfloat16",
+        "components_identical": {
+          "weight": true,
+          "scales": true,
+          "biases": true
+        }
+      },
+      {
+        "sample": "q_proj",
+        "bits": 6,
+        "source_dtype": "mlx.core.bfloat16",
+        "components_identical": {
+          "weight": true,
+          "scales": true,
+          "biases": true
+        }
+      },
+      {
+        "sample": "router",
+        "bits": 8,
+        "source_dtype": "mlx.core.bfloat16",
+        "components_identical": {
+          "weight": true,
+          "scales": true,
+          "biases": true
+        }
+      },
+      {
+        "sample": "expert_up",
+        "bits": 6,
+        "source_dtype": "mlx.core.bfloat16",
+        "components_identical": {
+          "weight": true,
+          "scales": true,
+          "biases": true
+        }
+      },
+      {
+        "sample": "q_norm",
+        "unquantized_identical": true
+      }
+    ],
+    "all_sampled_checks_passed": true,
+    "scope": "64 sampled rows from four layer-0/embedding matrices, plus the layer-0 query normalization vector. Not every model tensor."
+  },
+  "greedy": {
+    "original-bf16": [
+      {
+        "case": "telemetry-after-first-unknown-agent",
+        "prompt_tokens": 24299,
+        "prompt_sha256": "5f02c1cc50afe2a8d3cb96d61a4d86e6f91abf1541f3c29c0fcaa4a79d9a4e99",
+        "generation_tokens": 118,
+        "finish_reason": "stop",
+        "elapsed_seconds": 7.288,
+        "peak_memory_GB": 25.060848825,
+        "closed_thinking": true,
+        "tool_calls": [
+          {
+            "name": "read",
+            "arguments": {
+              "path": "/Users/pauleveritt/.pi/agent/git/github.com/obra/superpowers/skills/brainstorming/SKILL.md"
+            }
+          }
+        ],
+        "invalid_tool_calls": []
+      },
+      {
+        "case": "50k-code-document",
+        "prompt_tokens": 50000,
+        "prompt_sha256": "bbe421b37aa6291b70df2329d58ddbefb5656367abc8693e0e13ae4c6f061019",
+        "generation_tokens": 4096,
+        "finish_reason": "length",
+        "elapsed_seconds": 62.175,
+        "peak_memory_GB": 25.45135706,
+        "closed_thinking": false,
+        "tool_calls": [],
+        "invalid_tool_calls": [],
+        "retrieval_passed": false
+      },
+      {
+        "case": "short-arithmetic",
+        "prompt_tokens": 22,
+        "prompt_sha256": "bf945ed9dc189c06007a0241c8783aa4ea04bc06d5f830128f6cb34582b96917",
+        "generation_tokens": 45,
+        "finish_reason": "stop",
+        "elapsed_seconds": 0.678,
+        "peak_memory_GB": 24.321893942,
+        "closed_thinking": true,
+        "tool_calls": [],
+        "invalid_tool_calls": [],
+        "arithmetic_passed": true
+      }
+    ],
+    "converted-q6": [
+      {
+        "case": "telemetry-after-first-unknown-agent",
+        "prompt_tokens": 24299,
+        "prompt_sha256": "5f02c1cc50afe2a8d3cb96d61a4d86e6f91abf1541f3c29c0fcaa4a79d9a4e99",
+        "generation_tokens": 157,
+        "finish_reason": "stop",
+        "elapsed_seconds": 6.898,
+        "peak_memory_GB": 10.870260491,
+        "closed_thinking": true,
+        "tool_calls": [
+          {
+            "name": "read",
+            "arguments": {
+              "path": "/Users/pauleveritt/.pi/agent/git/github.com/obra/superpowers/skills/brainstorming/SKILL.md"
+            }
+          }
+        ],
+        "invalid_tool_calls": []
+      },
+      {
+        "case": "50k-code-document",
+        "prompt_tokens": 50000,
+        "prompt_sha256": "bbe421b37aa6291b70df2329d58ddbefb5656367abc8693e0e13ae4c6f061019",
+        "generation_tokens": 4096,
+        "finish_reason": "length",
+        "elapsed_seconds": 52.668,
+        "peak_memory_GB": 11.18574127,
+        "closed_thinking": false,
+        "tool_calls": [],
+        "invalid_tool_calls": [],
+        "retrieval_passed": false
+      },
+      {
+        "case": "short-arithmetic",
+        "prompt_tokens": 22,
+        "prompt_sha256": "bf945ed9dc189c06007a0241c8783aa4ea04bc06d5f830128f6cb34582b96917",
+        "generation_tokens": 45,
+        "finish_reason": "stop",
+        "elapsed_seconds": 0.375,
+        "peak_memory_GB": 9.91087957,
+        "closed_thinking": true,
+        "tool_calls": [],
+        "invalid_tool_calls": [],
+        "arithmetic_passed": true
+      }
+    ]
+  },
+  "sampling": {
+    "original-bf16": [
+      {
+        "case": "telemetry-after-first-unknown-agent-seed-42",
+        "prompt_tokens": 24299,
+        "prompt_sha256": "5f02c1cc50afe2a8d3cb96d61a4d86e6f91abf1541f3c29c0fcaa4a79d9a4e99",
+        "generation_tokens": 1034,
+        "finish_reason": "stop",
+        "elapsed_seconds": 18.47,
+        "peak_memory_GB": 25.060852913,
+        "closed_thinking": true,
+        "tool_calls": [
+          {
+            "name": "subagent",
+            "arguments": {
+              "agent": "using-superpowers"
+            }
+          }
+        ],
+        "invalid_tool_calls": [
+          {
+            "name": "subagent",
+            "arguments": {
+              "agent": "using-superpowers"
+            }
+          }
+        ]
+      },
+      {
+        "case": "telemetry-after-first-unknown-agent-seed-43",
+        "prompt_tokens": 24299,
+        "prompt_sha256": "5f02c1cc50afe2a8d3cb96d61a4d86e6f91abf1541f3c29c0fcaa4a79d9a4e99",
+        "generation_tokens": 105,
+        "finish_reason": "stop",
+        "elapsed_seconds": 7.925,
+        "peak_memory_GB": 25.061049559,
+        "closed_thinking": true,
+        "tool_calls": [
+          {
+            "name": "read",
+            "arguments": {
+              "path": "/Users/pauleveritt/.pi/agent/git/github.com/obra/superpowers/skills/brainstorming/SKILL.md"
+            },
+            "path_exists": true
+          }
+        ],
+        "invalid_tool_calls": []
+      },
+      {
+        "case": "telemetry-after-first-unknown-agent-seed-44",
+        "prompt_tokens": 24299,
+        "prompt_sha256": "5f02c1cc50afe2a8d3cb96d61a4d86e6f91abf1541f3c29c0fcaa4a79d9a4e99",
+        "generation_tokens": 767,
+        "finish_reason": "stop",
+        "elapsed_seconds": 15.971,
+        "peak_memory_GB": 25.061049559,
+        "closed_thinking": true,
+        "tool_calls": [
+          {
+            "name": "read",
+            "arguments": {
+              "path": "/Users/pauleveritt/.pi/agent/git/github.com/obra/superpowers/skills/brainstorming/SKILL.md"
+            },
+            "path_exists": true
+          }
+        ],
+        "invalid_tool_calls": []
+      }
+    ],
+    "converted-q6": [
+      {
+        "case": "telemetry-after-first-unknown-agent-seed-42",
+        "prompt_tokens": 24299,
+        "prompt_sha256": "5f02c1cc50afe2a8d3cb96d61a4d86e6f91abf1541f3c29c0fcaa4a79d9a4e99",
+        "generation_tokens": 865,
+        "finish_reason": "stop",
+        "elapsed_seconds": 13.246,
+        "peak_memory_GB": 10.870260529,
+        "closed_thinking": true,
+        "tool_calls": [
+          {
+            "name": "read",
+            "arguments": {
+              "path": "/Users/pauleveritt/.pi/agent/git/github.com/obra/superpowers/skills/pi-subagents/SKILL.md"
+            },
+            "path_exists": false
+          }
+        ],
+        "invalid_tool_calls": []
+      },
+      {
+        "case": "telemetry-after-first-unknown-agent-seed-43",
+        "prompt_tokens": 24299,
+        "prompt_sha256": "5f02c1cc50afe2a8d3cb96d61a4d86e6f91abf1541f3c29c0fcaa4a79d9a4e99",
+        "generation_tokens": 702,
+        "finish_reason": "stop",
+        "elapsed_seconds": 12.492,
+        "peak_memory_GB": 10.870457137,
+        "closed_thinking": true,
+        "tool_calls": [
+          {
+            "name": "read",
+            "arguments": {
+              "path": "/Users/pauleveritt/.pi/agent/git/github.com/obra/superpowers/skills/pi-subagents/SKILL.md"
+            },
+            "path_exists": false
+          }
+        ],
+        "invalid_tool_calls": []
+      },
+      {
+        "case": "telemetry-after-first-unknown-agent-seed-44",
+        "prompt_tokens": 24299,
+        "prompt_sha256": "5f02c1cc50afe2a8d3cb96d61a4d86e6f91abf1541f3c29c0fcaa4a79d9a4e99",
+        "generation_tokens": 102,
+        "finish_reason": "stop",
+        "elapsed_seconds": 8.141,
+        "peak_memory_GB": 10.870457137,
+        "closed_thinking": true,
+        "tool_calls": [
+          {
+            "name": "read",
+            "arguments": {
+              "path": "/Users/pauleveritt/.pi/agent/git/github.com/nicobailon/pi-subagents/skills/pi-subagents/SKILL.md"
+            },
+            "path_exists": true
+          }
+        ],
+        "invalid_tool_calls": []
+      }
+    ]
+  },
+  "source_checkpoint_revision": "6f239041e7c79166f75f6788dbf7d1971fe1db89"
+}

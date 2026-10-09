@@ -48,6 +48,6 @@ as long as the prefix is stable and cached.
 
 **Consequence for the in-session mode and the budget hook.** A filtering
 hook must leave `reasoning_content` alone. The remaining lever on thinking
-cost is per-turn: a request-level `thinking_budget`, which oMLX honours
-and Pi never sends ([A5](../ablation-a5-thinking-medium/README.md)).
-That is a different measurement.
+cost would be per-turn: a request-level `thinking_budget`, which Pi never
+sends ([A5](../ablation-a5-thinking-medium/README.md)) and which, measured
+next, oMLX did not enforce for this model ([A13](../ablation-a13-budget-medium/README.md)).

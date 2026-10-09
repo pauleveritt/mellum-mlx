@@ -41,8 +41,8 @@ MELLUM_GUARDS='{"emptyFinalNudge":3,"loopBreaker":true}' uv run python -m ladder
 ## Reading
 
 **One prompt with steps in it: the model stops at the first "reply".**
-Three of A16's four failures ended after two to four requests with a
-29-character final and no source file changed: the model did Step 1
+Three of A16's four failures ended with a 29-character final after two,
+three and seven requests, with no source file changed: the model did Step 1
 ("read … reply with one line"), replied, and treated the turn as done.
 The fast times are the times of not doing the task. A step-wise document
 is read as a conversation script, not a work order; a one-prompt brief

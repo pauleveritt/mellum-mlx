@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { filterForMellum, MARK_ON, BOOTSTRAP_MARKER } from "./mellum-mode.ts";
+import { filterForMellum, MARK_ON, MARK_OFF, BOOTSTRAP_MARKER } from "./mellum-mode.ts";
 
 const text = (role, t) => ({ role, content: [{ type: "text", text: t }] });
 
@@ -48,4 +48,31 @@ test("a prompt queued just before the on-marker is kept, and marker messages nev
 	assert.equal(out.messages[1].content[0].text, "fix the cart total");
 	assert.ok(!JSON.stringify(out.messages).includes(MARK_ON));
 	assert.deepEqual(out.tools.map(t => t.function.name), ["read"], "pi-subagents' re-added tools are filtered out");
+});
+
+test("a developer-role instruction message is replaced too, and tool_choice naming a removed tool is dropped", () => {
+	const payload = {
+		messages: [{ role: "developer", content: "pi base" }, text("user", "task")],
+		tools: [{ type: "function", function: { name: "subagent" } }],
+		tool_choice: { type: "function", function: { name: "subagent" } },
+	};
+	const out = filterForMellum(payload, "v5");
+	assert.deepEqual(out.messages.map(m => m.role), ["system", "user"]);
+	assert.ok(!("tools" in out), "an empty tool list is removed, not sent");
+	assert.ok(!("tool_choice" in out));
+});
+
+test("markers between the prompt and the on-marker are skipped: [prompt, OFF, ON] keeps the prompt", () => {
+	const payload = { messages: [{ role: "system", content: "base" }, text("user", "task"), text("user", MARK_OFF), text("user", MARK_ON)] };
+	const out = filterForMellum(payload, "v5");
+	assert.deepEqual(out.messages.map(m => m.role), ["system", "user"]);
+	assert.equal(out.messages[1].content[0].text, "task");
+});
+
+test("a missing marker while interactively active is reported, not silently widened", () => {
+	const payload = { messages: [{ role: "system", content: "base" }, text("user", "old parent turn"), text("user", "task")] };
+	const out = filterForMellum(payload, "v5", { expectMarker: true });
+	assert.equal(out.messages.length, 2, "only the system prompt and the last user message survive");
+	assert.equal(out.messages[1].content[0].text, "task");
+	assert.equal(out.mellumModeMarkerMissing, true);
 });
